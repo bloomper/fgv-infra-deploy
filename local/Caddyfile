@@ -14,6 +14,11 @@ mail.fgv.local.nu:8443 {
     reverse_proxy mailpit:8025
 }
 
+analytics.fgv.local.nu:8443 {
+    tls internal
+    reverse_proxy umami-server:3000
+}
+
 api.register.fgv.local.nu:8443 {
     tls internal
     reverse_proxy spexregister-api:8080 host.docker.internal:8080 {

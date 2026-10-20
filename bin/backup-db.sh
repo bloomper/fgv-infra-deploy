@@ -13,4 +13,8 @@ docker compose exec -T keycloak-mysql sh -c \
   | gzip > "$target/keycloak-mysql.sql.gz"
 echo "wrote $target/keycloak-mysql.sql.gz"
 
+docker compose exec -T umami-postgres sh -c 'exec pg_dump -U "$POSTGRES_USER" --clean --if-exists "$POSTGRES_DB"' \
+  | gzip > "$target/umami-postgres.sql.gz"
+echo "wrote $target/umami-postgres.sql.gz"
+
 find backups -mindepth 1 -maxdepth 1 -type d -mtime "+$keep_days" -exec rm -rf {} +

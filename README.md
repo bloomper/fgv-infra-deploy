@@ -1,17 +1,18 @@
 # FGV Infra Deploy
 
 Docker Compose setup for the infrastructure that FGV's applications share on a single host, published through a
-Cloudflare Tunnel: Keycloak (realm `fgv`), which every FGV application logs in through, its MySQL, the shared Docker
-network and, on staging, Mailpit. Each application has its own deploy repository:
+Cloudflare Tunnel: Keycloak (realm `fgv`), which every FGV application logs in through, its MySQL, Umami for visitor
+statistics, the shared Docker network and, on staging, Mailpit. Each application has its own deploy repository:
 
 | Repository               | Runs                                                           |
 |--------------------------|----------------------------------------------------------------|
-| `fgv-infra-deploy`       | Keycloak, its database, the shared network, Mailpit on staging |
+| `fgv-infra-deploy`       | Keycloak, Umami, their databases, the shared network, Mailpit on staging |
 | [spexregister-deploy][1] | Spexregister server, web and database                          |
 | [fgv-revival-deploy][2]  | Nyuppsättning server, web and database                           |
 
 ```
 Browser ──https──▶ Cloudflare ──tunnel──▶ cloudflared ─┬─▶ keycloak-server:8080  (KEYCLOAK_HOST)
+                                                       ├─▶ umami-server:3000     (ANALYTICS_HOST, dashboard only)
                                                        └─▶ mailpit:8025          (MAIL_HOST, staging only)
 
                                    network fgv-<DEPLOY_ENV>
@@ -19,11 +20,13 @@ spexregister-deploy: spexregister-api ──┐
                                         ├──▶ keycloak-server:8080 ──▶ keycloak-mysql
 fgv-revival-deploy:  revival-api ───────┘
                      revival-api ───────▶ spexregister-api:8080
+spexregister-deploy: spexregister-web ──▶ umami-server:3000 ──▶ umami-postgres
 ```
 
 This repository creates the Docker network `fgv-<DEPLOY_ENV>`. The applications' API containers join it to reach
 Keycloak as `keycloak-server:8080` (signing keys, admin API) and, on staging, Mailpit as `mailpit:1025`. FGV
-Revival also reaches Spexregister's API on it as `spexregister-api:8080`. Browsers and the web containers use
+Revival also reaches Spexregister's API on it as `spexregister-api:8080`, and Spexregister's web forwards its visitor
+statistics to Umami as `umami-server:3000`. Browsers and the web containers use
 Keycloak's public address, `https://KEYCLOAK_HOST/auth`. Start this repository first. The applications refuse to start
 while the network is missing.
 
@@ -38,14 +41,14 @@ and the project's own network with them, e.g. `fgv-infra-staging_keycloak_mysql_
 
 | File                          | Purpose                                                                    |
 |-------------------------------|----------------------------------------------------------------------------|
-| `compose.yaml`                | Keycloak and MySQL, configured entirely from `.env`                        |
+| `compose.yaml`                | Keycloak and MySQL, Umami and PostgreSQL, configured entirely from `.env`  |
 | `compose.tunnel.yaml`         | `cloudflared` connector, for hosts published through a Cloudflare Tunnel   |
 | `compose.staging.yaml`        | Staging additions: Mailpit catches all outgoing mail                       |
 | `staging.env.example`         | Template for `.env` on the staging host                                    |
 | `production.env.example`      | Template for `.env` on the production host                                 |
 | `bin/init-secrets.sh`         | Generates random secrets into `secrets/` (never overwrites existing ones)  |
 | `bin/configure-keycloak.sh`   | Sets client secrets, theme and mail settings in the realm                  |
-| `bin/backup-db.sh`            | Dumps the database into `backups/`, pruning dumps older than 14 days       |
+| `bin/backup-db.sh`            | Dumps the databases into `backups/`, pruning dumps older than 14 days      |
 | `local/`                      | The local development stack, see *Local development*                       |
 
 `COMPOSE_FILE` in `.env` selects the overlays, so plain `docker compose ...` commands work on each host.
@@ -53,6 +56,7 @@ and the project's own network with them, e.g. `fgv-infra-staging_keycloak_mysql_
 | `.env` variable  | Image                   | Source repo       |
 |------------------|-------------------------|-------------------|
 | `KEYCLOAK_IMAGE` | `bloomper/fgv-keycloak` | [fgv-keycloak][3] |
+| `UMAMI_IMAGE`    | `ghcr.io/umami-software/umami` | [Umami][4] |
 
 The image contains the SPI providers, the FGV theme and the realm import file `fgv.json`.
 
@@ -82,12 +86,13 @@ Universal SSL certificate doesn't cover it.
    Enter the hostname as subdomain plus domain, and the service in **Service URL**. Cloudflare creates the
    DNS records itself.
 
-   | Hostname        | Service URL                          |
-   |-----------------|--------------------------------------|
-   | `KEYCLOAK_HOST` | `http://keycloak-server:8080`        |
-   | `MAIL_HOST`     | `http://mailpit:8025` (staging only) |
+   | Hostname         | Service URL                          |
+   |------------------|--------------------------------------|
+   | `KEYCLOAK_HOST`  | `http://keycloak-server:8080`        |
+   | `ANALYTICS_HOST` | `http://umami-server:3000`           |
+   | `MAIL_HOST`      | `http://mailpit:8025` (staging only) |
 
-4. Restrict who can reach the admin console and Mailpit with Cloudflare Access. See *Cloudflare Access* below.
+4. Restrict who can reach the admin console, Umami and Mailpit with Cloudflare Access. See *Cloudflare Access* below.
 5. Open *Turnstile* in the dashboard and select *Add widget*. Name it e.g. `keycloak-staging`, add `KEYCLOAK_HOST` as
    hostname and choose *Managed* as widget mode. Put the site key in `TURNSTILE_SITE_KEY` in `.env` and the
    secret key in `secrets/TURNSTILE_SECRET_KEY` (see section 3 below).
@@ -107,12 +112,13 @@ An application with no policy denies everyone.
 
 | Application   | Destinations                                    | Allow policy          |
 |---------------|-------------------------------------------------|-----------------------|
-| FGV admin     | `MAIL_HOST`, `KEYCLOAK_HOST` with path `auth/admin` | *Emails*: your own address |
+| FGV admin     | `MAIL_HOST`, `ANALYTICS_HOST`, `KEYCLOAK_HOST` with path `auth/admin` | *Emails*: your own address |
 
 Leave the rest of `KEYCLOAK_HOST` unprotected. The applications' web containers call Keycloak's token and userinfo
 endpoints server-side through `https://KEYCLOAK_HOST`. They have no Access cookie, so login breaks if Access covers
 those paths. The applications' API containers use the admin API through `keycloak-server:8080`, so Access on
-`auth/admin` doesn't affect them.
+`auth/admin` doesn't affect them. All of `ANALYTICS_HOST` can sit behind Access: browsers never call Umami directly,
+because the applications' web containers serve the tracker and forward its events over the shared network.
 
 ## 3. Checkout and configuration
 
@@ -143,7 +149,7 @@ printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 ## 4. First start
 
 ```shell
-docker compose up -d                      # Keycloak, MySQL and, on staging, Mailpit
+docker compose up -d                      # Keycloak, Umami, their databases and, on staging, Mailpit
 docker compose ps keycloak-server         # wait for "healthy"
 bin/configure-keycloak.sh
 ```
@@ -160,6 +166,20 @@ You can run it again safely. Everything else comes from `fgv.json`, which reads 
 applications from the variables above.
 
 Then start the applications with their deploy repositories.
+
+### Umami
+
+Umami starts with the user `admin` and password `umami`. Before anything else:
+
+1. Open `https://ANALYTICS_HOST`, sign in and change the password under *Profile* (and enable two-factor
+   authentication there). Create personal users under *Settings → Users* if others should see the statistics.
+2. Under *Websites → Add website*, add one website per application, e.g. `Spexregister` with domain
+   `SPEXREGISTER_WEB_HOST`.
+3. Copy each website's ID (*Edit → Website ID*) into that application's `.env` as `UMAMI_WEBSITE_ID` and recreate
+   its web container. Without the ID the application sends nothing.
+
+Umami sets no cookies and stores no IP addresses: a visitor is a hash of IP, browser and website with a salt that
+changes every month. Spexregister also drops query strings, since its searches can hold names and personnummer.
 
 Keycloak admin console: `https://KEYCLOAK_HOST/auth/admin`, user `KEYCLOAK_ADMIN`, password in
 `secrets/KEYCLOAK_ADMIN_PASSWORD`.
@@ -216,10 +236,11 @@ newline, e.g. `printf '%s' '<password>' > secrets/SMTP_PASSWORD`. Check the resu
 | Location                     | Contents                         | Backup                 |
 |------------------------------|----------------------------------|------------------------|
 | volume `keycloak_mysql_data` | Keycloak database (realm, users) | `bin/backup-db.sh`     |
+| volume `umami_postgres_data` | Umami database (statistics)      | `bin/backup-db.sh`     |
 | volume `mailpit_data`        | Caught mail (staging only)       | not needed             |
 | `secrets/`                   | Passwords and client secrets     | copy off the host once |
 
-`bin/backup-db.sh` uses `mysqldump --single-transaction`, which is consistent without stopping anything. Run it
+`bin/backup-db.sh` uses `mysqldump --single-transaction` and `pg_dump`, both consistent without stopping anything. Run it
 nightly from the host user's crontab (`crontab -e`):
 
 ```
@@ -234,6 +255,8 @@ To restore a dump:
 ```shell
 gunzip -c backups/<timestamp>/keycloak-mysql.sql.gz | docker compose exec -T keycloak-mysql \
   sh -c 'MYSQL_PWD=$(cat /run/secrets/KEYCLOAK_MYSQL_ROOT_PASSWORD) mysql -uroot "$MYSQL_DATABASE"'
+gunzip -c backups/<timestamp>/umami-postgres.sql.gz | docker compose exec -T umami-postgres \
+  sh -c 'psql -q -U "$POSTGRES_USER" "$POSTGRES_DB"'
 ```
 
 Every service logs to the console only; read it with `docker compose logs -f <service>`. Each service keeps at
@@ -242,7 +265,7 @@ most 5 × 10 MB of console output (`x-logging` in the compose files), so logs ca
 ## Resetting staging data
 
 ```shell
-docker compose down -v                    # removes the volumes: Keycloak realm and users, mail
+docker compose down -v                    # removes the volumes: Keycloak realm and users, statistics, mail
 ```
 
 Stop the applications first, since their containers are attached to the shared network. Then repeat *First start*.
@@ -257,7 +280,8 @@ A production host differs in these ways:
   the example are placeholders)
 - no sample users: the realm in the Keycloak image contains none
 - `bin/backup-db.sh` scheduled in cron, with `backups/` copied to off-host storage
-- `KEYCLOAK_IMAGE` pinned to a release, e.g. `bloomper/fgv-keycloak:1.1.0`, instead of `develop`, and
+- `KEYCLOAK_IMAGE` pinned to a release, e.g. `bloomper/fgv-keycloak:1.1.0`, instead of `develop`, `UMAMI_IMAGE` to
+  an exact version such as `ghcr.io/umami-software/umami:3.4.0` (it migrates its database on start), and
   `CLOUDFLARED_VERSION` pinned instead of `latest`, so that an update happens only when `.env` changes
 
 Add `compose.tunnel.yaml` to `COMPOSE_FILE` if production also goes through a Cloudflare Tunnel, using its own
@@ -272,6 +296,7 @@ own database and API locally:
 |-------------------|----------------------------------------------------------------------------|
 | `keycloak-server` | `https://auth.fgv.local.nu:8443/auth`, `keycloak-server:8080` on `fgv-local` |
 | `mailpit`         | `https://mail.fgv.local.nu:8443` or `http://localhost:8025`, SMTP on `mailpit:1025` and `localhost:1025` |
+| `umami-server`    | `https://analytics.fgv.local.nu:8443`, `umami-server:3000` on `fgv-local`  |
 | `caddy`           | Port 8443 with a local certificate, also for `api.register.fgv.local.nu`   |
 
 The project is `fgv-infra-local` and the shared network is `fgv-local`, which `spexregister-server`'s
@@ -282,7 +307,7 @@ and that application. FGV Revival shows spexes as unavailable until Spexregister
 Add to `/etc/hosts` (or the Windows equivalent):
 
 ```
-127.0.0.1 auth.fgv.local.nu mail.fgv.local.nu api.register.fgv.local.nu register.fgv.local.nu
+127.0.0.1 auth.fgv.local.nu mail.fgv.local.nu analytics.fgv.local.nu api.register.fgv.local.nu register.fgv.local.nu
 ```
 
 The secrets are files in `local/.docker/secrets/`, in git with the placeholder `CHANGE_ME`. Replace each one without
@@ -306,6 +331,10 @@ docker compose up -d && docker compose ps
 - Registration uses Cloudflare's Turnstile test keys, which always pass. To see a failed challenge, add
   `TURNSTILE_SECRET_KEY=2x0000000000000000000000000000000AA` to `local/.env` and run
   `docker compose up -d keycloak-server`.
+- Umami starts with user `admin` and password `umami`, which is fine locally. Add a website for
+  `localhost` and give its ID to the application, e.g. `UMAMI_WEBSITE_ID` in Spexregister's `.env.local`. Its
+  database is in `local/.docker/umami-postgres/data`; empty that directory to start over. Browsers with *Do Not
+  Track* switched on send nothing, since Spexregister honours it.
 - Caddy's root certificate is `local/.docker/caddy/data/caddy/pki/authorities/local/root.crt`. Import it into the
   operating system's trust store, and give it to tools that don't use that store, such as Node's
   `NODE_EXTRA_CA_CERTS`.
@@ -327,3 +356,4 @@ release tags are never overwritten.
 [1]: https://github.com/bloomper/spexregister-deploy
 [2]: https://github.com/bloomper/fgv-revival-deploy
 [3]: https://github.com/bloomper/fgv-keycloak
+[4]: https://github.com/umami-software/umami
