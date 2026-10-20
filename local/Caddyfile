@@ -1,0 +1,25 @@
+{
+    local_certs
+    http_port 0
+    https_port 8443
+}
+
+auth.fgv.local.nu:8443 {
+    tls internal
+    reverse_proxy keycloak-server:8080
+}
+
+mail.fgv.local.nu:8443 {
+    tls internal
+    reverse_proxy mailpit:8025
+}
+
+api.register.fgv.local.nu:8443 {
+    tls internal
+    reverse_proxy spexregister-api:8080 host.docker.internal:8080 {
+        lb_policy first
+        lb_try_duration 2s
+        fail_duration 10s
+        header_up X-Forwarded-Port {http.request.port}
+    }
+}
