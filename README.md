@@ -337,8 +337,8 @@ docker compose up -d && docker compose ps
 - Registration uses Cloudflare's Turnstile test keys, which always pass. To see a failed challenge, add
   `TURNSTILE_SECRET_KEY=2x0000000000000000000000000000000AA` to `local/.env` and run
   `docker compose up -d keycloak-server`.
-- Umami starts with user `admin` and password `umami`, which is fine locally. Add a website for
-  `localhost` and give its ID to the application, e.g. `UMAMI_WEBSITE_ID` in Spexregister's `.env.local`. Its
+- Umami keeps user `admin` and password `umami` locally. `local/bin/configure-umami.sh` adds a website for the host
+  of `SPEXREGISTER_URL` (`localhost`) and prints its ID for `UMAMI_WEBSITE_ID` in Spexregister web's `.env.local`. Its
   database is in `local/.docker/umami-postgres/data`; empty that directory to start over. Browsers with *Do Not
   Track* switched on send nothing, since Spexregister honours it.
 - Caddy's root certificate is `local/.docker/caddy/data/caddy/pki/authorities/local/root.crt`. Import it into the

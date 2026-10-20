@@ -2,14 +2,28 @@
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
+if [[ ${1:-} == local ]]; then
+  cd local
+fi
 set -a
 . ./.env
 set +a
 
+if [[ ${1:-} == local ]]; then
+  password=umami
+  domain=${SPEXREGISTER_URL#*://}
+  domain=${domain%%[:/]*}
+  target="Spexregister web's .env.local"
+else
+  password=$(cat secrets/UMAMI_ADMIN_PASSWORD)
+  domain=$SPEXREGISTER_WEB_HOST
+  target="spexregister-deploy's .env"
+fi
+
 # Runs inside umami-server against its own port, so Umami needs no published route yet. The password arrives on
 # stdin, never on a command line.
 read -r -d '' script <<'EOF' || true
-const [name, domain] = process.argv.slice(1);
+const [name, domain, target] = process.argv.slice(1);
 let password = "";
 for await (const chunk of process.stdin) password += chunk;
 
@@ -57,8 +71,8 @@ if (website) {
   website = (await call("/websites", {name, domain}, session.token)).json;
   console.log(`created website ${name}`);
 }
-console.log(`UMAMI_WEBSITE_ID=${website.id}   (spexregister-deploy's .env)`);
+console.log(`UMAMI_WEBSITE_ID=${website.id}   (${target})`);
 EOF
 
-docker compose exec -T umami-server node --input-type=module -e "$script" \
-  "${SPEXREGISTER_NAME:-Spexregister}" "$SPEXREGISTER_WEB_HOST" < secrets/UMAMI_ADMIN_PASSWORD
+printf '%s' "$password" | docker compose exec -T umami-server node --input-type=module -e "$script" \
+  "${SPEXREGISTER_NAME:-Spexregister}" "$domain" "$target"
