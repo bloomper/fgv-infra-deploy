@@ -89,12 +89,60 @@ services:
       - SMTP_PASSWORD
       - TURNSTILE_SECRET_KEY
 
+  umami-postgres:
+    image: ${POSTGRES_IMAGE:-postgres:17-alpine}
+    environment:
+      POSTGRES_DB: ${UMAMI_POSTGRES_DATABASE}
+      POSTGRES_USER: ${UMAMI_POSTGRES_USER}
+      POSTGRES_PASSWORD_FILE: /run/secrets/UMAMI_POSTGRES_PASSWORD
+    restart: unless-stopped
+    logging: *logging
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\"" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    volumes:
+      - umami_postgres_data:/var/lib/postgresql/data
+    secrets:
+      - UMAMI_POSTGRES_PASSWORD
+
+  umami-server:
+    image: ${UMAMI_IMAGE:?UMAMI_IMAGE must be set in .env}
+    command:
+      - sh
+      - -c
+      - |
+        export DATABASE_URL=postgresql://${UMAMI_POSTGRES_USER}:$$(cat /run/secrets/UMAMI_POSTGRES_PASSWORD)@umami-postgres:5432/${UMAMI_POSTGRES_DATABASE}
+        export APP_SECRET=$$(cat /run/secrets/UMAMI_APP_SECRET)
+        export TWO_FACTOR_ENCRYPTION_KEY=$$(cat /run/secrets/UMAMI_TWO_FACTOR_ENCRYPTION_KEY)
+        exec sh scripts/start-docker.sh
+    init: true
+    restart: unless-stopped
+    logging: *logging
+    healthcheck:
+      test: [ "CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:3000/api/heartbeat" ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    depends_on:
+      umami-postgres:
+        condition: service_healthy
+    networks:
+      - default
+      - fgv
+    secrets:
+      - UMAMI_POSTGRES_PASSWORD
+      - UMAMI_APP_SECRET
+      - UMAMI_TWO_FACTOR_ENCRYPTION_KEY
+
 volumes:
   keycloak_mysql_data:
+  umami_postgres_data:
 
 networks:
-  # Shared with spexregister-deploy and fgv-revival-deploy, whose API containers reach Keycloak as
-  # keycloak-server:8080
   fgv:
     name: fgv-${DEPLOY_ENV}
 
@@ -109,3 +157,9 @@ secrets:
     file: ./secrets/SMTP_PASSWORD
   TURNSTILE_SECRET_KEY:
     file: ./secrets/TURNSTILE_SECRET_KEY
+  UMAMI_POSTGRES_PASSWORD:
+    file: ./secrets/UMAMI_POSTGRES_PASSWORD
+  UMAMI_APP_SECRET:
+    file: ./secrets/UMAMI_APP_SECRET
+  UMAMI_TWO_FACTOR_ENCRYPTION_KEY:
+    file: ./secrets/UMAMI_TWO_FACTOR_ENCRYPTION_KEY
