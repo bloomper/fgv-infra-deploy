@@ -1,0 +1,28 @@
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "5"
+
+services:
+  # Catches the mail of Keycloak and of the applications on the shared network, which send to mailpit:1025
+  mailpit:
+    image: axllent/mailpit:v1.31.4
+    restart: unless-stopped
+    logging: *logging
+    volumes:
+      - mailpit_data:/data
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_MAX_MESSAGES: 5000
+    networks:
+      - default
+      - fgv
+
+  keycloak-server:
+    depends_on:
+      mailpit:
+        condition: service_started
+
+volumes:
+  mailpit_data:
