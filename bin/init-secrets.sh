@@ -21,6 +21,7 @@ generate KEYCLOAK_MYSQL_ROOT_PASSWORD "$(random 32)"
 generate KEYCLOAK_MYSQL_USER_PASSWORD "$(random 32)"
 generate KEYCLOAK_ADMIN_PASSWORD "$(random 24)"
 generate UMAMI_POSTGRES_PASSWORD "$(random 32)"
+generate UMAMI_ADMIN_PASSWORD "$(random 24)"
 generate UMAMI_APP_SECRET "$(random 48)"
 generate UMAMI_TWO_FACTOR_ENCRYPTION_KEY "$(openssl rand -hex 32)"
 

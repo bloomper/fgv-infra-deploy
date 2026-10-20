@@ -48,6 +48,7 @@ and the project's own network with them, e.g. `fgv-infra-staging_keycloak_mysql_
 | `production.env.example`      | Template for `.env` on the production host                                 |
 | `bin/init-secrets.sh`         | Generates random secrets into `secrets/` (never overwrites existing ones)  |
 | `bin/configure-keycloak.sh`   | Sets client secrets, theme and mail settings in the realm                  |
+| `bin/configure-umami.sh`      | Sets Umami's admin password and adds Spexregister's website                |
 | `bin/backup-db.sh`            | Dumps the databases into `backups/`, pruning dumps older than 14 days      |
 | `local/`                      | The local development stack, see *Local development*                       |
 
@@ -152,6 +153,7 @@ printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 docker compose up -d                      # Keycloak, Umami, their databases and, on staging, Mailpit
 docker compose ps keycloak-server         # wait for "healthy"
 bin/configure-keycloak.sh
+bin/configure-umami.sh                    # prints UMAMI_WEBSITE_ID for spexregister-deploy
 ```
 
 Keycloak imports `fgv.json` only when the realm doesn't exist yet. Then `configure-keycloak.sh` makes these
@@ -169,14 +171,18 @@ Then start the applications with their deploy repositories.
 
 ### Umami
 
-Umami starts with the user `admin` and password `umami`. Before anything else:
+Umami creates the user `admin` with password `umami` and has no setting to change that. `bin/configure-umami.sh`
+therefore runs inside the container, before the route is published:
 
-1. Open `https://ANALYTICS_HOST`, sign in and change the password under *Profile* (and enable two-factor
-   authentication there). Create personal users under *Settings → Users* if others should see the statistics.
-2. Under *Websites → Add website*, add one website per application, e.g. `Spexregister` with domain
-   `SPEXREGISTER_WEB_HOST`.
-3. Copy each website's ID (*Edit → Website ID*) into that application's `.env` as `UMAMI_WEBSITE_ID` and recreate
-   its web container. Without the ID the application sends nothing.
+- changes `admin`'s password to `secrets/UMAMI_ADMIN_PASSWORD`, which `bin/init-secrets.sh` generates
+- adds a website `SPEXREGISTER_NAME` for `SPEXREGISTER_WEB_HOST`, unless one exists, and prints its ID
+
+Put the ID in spexregister-deploy's `.env` as `UMAMI_WEBSITE_ID` and recreate its web container. Without the ID the
+application sends nothing. You can run the script again safely. Once `admin` has two-factor authentication (under
+*Profile* in the dashboard), it can't log in from the script any more and skips the websites. Create personal users
+under *Settings → Users* if others should see the statistics.
+
+Umami dashboard: `https://ANALYTICS_HOST`, user `admin`, password in `secrets/UMAMI_ADMIN_PASSWORD`.
 
 Umami sets no cookies and stores no IP addresses: a visitor is a hash of IP, browser and website with a salt that
 changes every month. Spexregister also drops query strings, since its searches can hold names and personnummer.
