@@ -9,21 +9,29 @@ set -a
 . ./.env
 set +a
 
+host() {
+  local host=${1#*://}
+  echo "${host%%[:/]*}"
+}
+
 if [[ ${1:-} == local ]]; then
   password=umami
-  domain=${SPEXREGISTER_URL#*://}
-  domain=${domain%%[:/]*}
-  target="Spexregister web's .env.local"
+  websites=(
+    "${SPEXREGISTER_NAME:-Spexregister}" "$(host "$SPEXREGISTER_URL")" "Spexregister web's .env.local"
+    "${FGV_REVIVAL_NAME:-Nyuppsättning}" "$(host "$FGV_REVIVAL_URL")" "Nyuppsättning web's .env.local"
+  )
 else
   password=$(cat secrets/UMAMI_ADMIN_PASSWORD)
-  domain=$SPEXREGISTER_WEB_HOST
-  target="spexregister-deploy's .env"
+  websites=(
+    "${SPEXREGISTER_NAME:-Spexregister}" "$SPEXREGISTER_WEB_HOST" "spexregister-deploy's .env"
+    "${FGV_REVIVAL_NAME:-Nyuppsättning}" "$FGV_REVIVAL_WEB_HOST" "fgv-revival-deploy's .env"
+  )
 fi
 
 # Runs inside umami-server against its own port, so Umami needs no published route yet. The password arrives on
 # stdin, never on a command line.
 read -r -d '' script <<'EOF' || true
-const [name, domain, target] = process.argv.slice(1);
+const websites = process.argv.slice(1);
 let password = "";
 for await (const chunk of process.stdin) password += chunk;
 
@@ -64,15 +72,17 @@ if (!session?.token) {
 }
 
 const {data = []} = (await call("/websites", null, session.token)).json;
-let website = data.find((w) => w.domain === domain);
-if (website) {
-  console.log(`kept website ${name}`);
-} else {
-  website = (await call("/websites", {name, domain}, session.token)).json;
-  console.log(`created website ${name}`);
+for (let i = 0; i < websites.length; i += 3) {
+  const [name, domain, target] = websites.slice(i, i + 3);
+  let website = data.find((w) => w.domain === domain && w.name === name);
+  if (website) {
+    console.log(`kept website ${name}`);
+  } else {
+    website = (await call("/websites", {name, domain}, session.token)).json;
+    console.log(`created website ${name}`);
+  }
+  console.log(`UMAMI_WEBSITE_ID=${website.id}   (${target})`);
 }
-console.log(`UMAMI_WEBSITE_ID=${website.id}   (${target})`);
 EOF
 
-printf '%s' "$password" | docker compose exec -T umami-server node --input-type=module -e "$script" \
-  "${SPEXREGISTER_NAME:-Spexregister}" "$domain" "$target"
+printf '%s' "$password" | docker compose exec -T umami-server node --input-type=module -e "$script" "${websites[@]}"

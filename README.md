@@ -20,13 +20,15 @@ spexregister-deploy: spexregister-api ──┐
                                         ├──▶ keycloak-server:8080 ──▶ keycloak-mysql
 fgv-revival-deploy:  revival-api ───────┘
                      revival-api ───────▶ spexregister-api:8080
-spexregister-deploy: spexregister-web ──▶ umami-server:3000 ──▶ umami-postgres
+spexregister-deploy: spexregister-web ──┐
+                                        ├──▶ umami-server:3000 ──▶ umami-postgres
+fgv-revival-deploy:  revival-web ───────┘
 ```
 
 This repository creates the Docker network `fgv-<DEPLOY_ENV>`. The applications' API containers join it to reach
 Keycloak as `keycloak-server:8080` (signing keys, admin API) and, on staging, Mailpit as `mailpit:1025`. FGV
-Revival also reaches Spexregister's API on it as `spexregister-api:8080`, and Spexregister's web forwards its visitor
-statistics to Umami as `umami-server:3000`. Browsers and the web containers use
+Revival also reaches Spexregister's API on it as `spexregister-api:8080`, and both applications' web containers
+forward their visitor statistics to Umami as `umami-server:3000`. Browsers and the web containers use
 Keycloak's public address, `https://KEYCLOAK_HOST/auth`. Start this repository first. The applications refuse to start
 while the network is missing.
 
@@ -48,7 +50,7 @@ and the project's own network with them, e.g. `fgv-infra-staging_keycloak_mysql_
 | `production.env.example`      | Template for `.env` on the production host                                 |
 | `bin/init-secrets.sh`         | Generates random secrets into `secrets/` (never overwrites existing ones)  |
 | `bin/configure-keycloak.sh`   | Sets client secrets, theme and mail settings in the realm                  |
-| `bin/configure-umami.sh`      | Sets Umami's admin password and adds Spexregister's website                |
+| `bin/configure-umami.sh`      | Sets Umami's admin password and adds the applications' websites            |
 | `bin/backup-db.sh`            | Dumps the databases into `backups/`, pruning dumps older than 14 days      |
 | `local/`                      | The local development stack, see *Local development*                       |
 
@@ -153,7 +155,7 @@ printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 docker compose up -d                      # Keycloak, Umami, their databases and, on staging, Mailpit
 docker compose ps keycloak-server         # wait for "healthy"
 bin/configure-keycloak.sh
-bin/configure-umami.sh                    # prints UMAMI_WEBSITE_ID for spexregister-deploy
+bin/configure-umami.sh                    # prints UMAMI_WEBSITE_ID for spexregister-deploy and fgv-revival-deploy
 ```
 
 Keycloak imports `fgv.json` only when the realm doesn't exist yet. Then `configure-keycloak.sh` makes these
@@ -175,9 +177,10 @@ Umami creates the user `admin` with password `umami` and has no setting to chang
 therefore runs inside the container, before the route is published:
 
 - changes `admin`'s password to `secrets/UMAMI_ADMIN_PASSWORD`, which `bin/init-secrets.sh` generates
-- adds a website `SPEXREGISTER_NAME` for `SPEXREGISTER_WEB_HOST`, unless one exists, and prints its ID
+- adds a website `SPEXREGISTER_NAME` for `SPEXREGISTER_WEB_HOST` and one `FGV_REVIVAL_NAME` for
+  `FGV_REVIVAL_WEB_HOST`, unless they exist, and prints their IDs
 
-Put the ID in spexregister-deploy's `.env` as `UMAMI_WEBSITE_ID` and recreate its web container. Without the ID the
+Put each ID in its deploy repository's `.env` as `UMAMI_WEBSITE_ID` and recreate its web container. Without the ID the
 application sends nothing. You can run the script again safely. Once `admin` has two-factor authentication (under
 *Profile* in the dashboard), it can't log in from the script any more and skips the websites. Create personal users
 under *Settings → Users* if others should see the statistics.
@@ -185,7 +188,8 @@ under *Settings → Users* if others should see the statistics.
 Umami dashboard: `https://ANALYTICS_HOST`, user `admin`, password in `secrets/UMAMI_ADMIN_PASSWORD`.
 
 Umami sets no cookies and stores no IP addresses: a visitor is a hash of IP, browser and website with a salt that
-changes every month. Spexregister also drops query strings, since its searches can hold names and personnummer.
+changes every month. Both applications also drop query strings, since Spexregister's searches can hold names and
+personnummer.
 
 Keycloak admin console: `https://KEYCLOAK_HOST/auth/admin`, user `KEYCLOAK_ADMIN`, password in
 `secrets/KEYCLOAK_ADMIN_PASSWORD`.
@@ -337,10 +341,11 @@ docker compose up -d && docker compose ps
 - Registration uses Cloudflare's Turnstile test keys, which always pass. To see a failed challenge, add
   `TURNSTILE_SECRET_KEY=2x0000000000000000000000000000000AA` to `local/.env` and run
   `docker compose up -d keycloak-server`.
-- Umami keeps user `admin` and password `umami` locally. `local/bin/configure-umami.sh` adds a website for the host
-  of `SPEXREGISTER_URL` (`localhost`) and prints its ID for `UMAMI_WEBSITE_ID` in Spexregister web's `.env.local`. Its
+- Umami keeps user `admin` and password `umami` locally. `local/bin/configure-umami.sh` adds a website for the hosts
+  of `SPEXREGISTER_URL` and `FGV_REVIVAL_URL` (both `localhost`, told apart by name) and prints their IDs for
+  `UMAMI_WEBSITE_ID` in each web's `.env.local`. Its
   database is in `local/.docker/umami-postgres/data`; empty that directory to start over. Browsers with *Do Not
-  Track* switched on send nothing, since Spexregister honours it.
+  Track* switched on send nothing, since both applications honour it.
 - Caddy's root certificate is `local/.docker/caddy/data/caddy/pki/authorities/local/root.crt`. Import it into the
   operating system's trust store, and give it to tools that don't use that store, such as Node's
   `NODE_EXTRA_CA_CERTS`.
