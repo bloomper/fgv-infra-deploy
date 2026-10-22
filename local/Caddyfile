@@ -28,3 +28,13 @@ api.register.fgv.local.nu:8443 {
         header_up X-Forwarded-Port {http.request.port}
     }
 }
+
+api.revival.fgv.local.nu:8443 {
+    tls internal
+    reverse_proxy revival-api:8080 host.docker.internal:8081 {
+        lb_policy first
+        lb_try_duration 2s
+        fail_duration 10s
+        header_up X-Forwarded-Port {http.request.port}
+    }
+}

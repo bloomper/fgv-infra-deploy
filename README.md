@@ -307,17 +307,16 @@ own database and API locally:
 | `keycloak-server` | `https://auth.fgv.local.nu:8443/auth`, `keycloak-server:8080` on `fgv-local` |
 | `mailpit`         | `https://mail.fgv.local.nu:8443` or `http://localhost:8025`, SMTP on `mailpit:1025` and `localhost:1025` |
 | `umami-server`    | `https://analytics.fgv.local.nu:8443`, `umami-server:3000` on `fgv-local`  |
-| `caddy`           | Port 8443 with a local certificate, also for `api.register.fgv.local.nu`   |
+| `caddy`           | Port 8443 with a local certificate, also for `api.register.fgv.local.nu` and `api.revival.fgv.local.nu` |
 
-The project is `fgv-infra-local` and the shared network is `fgv-local`, which `spexregister-server`'s
-`docker-compose.yaml` joins. FGV Revival's server and web run on the host with `./gradlew bootRun` and `npm run dev`
-and reach Keycloak through Caddy, so they need no network. Running only one application is fine: start this stack
-and that application. FGV Revival shows spexes as unavailable until Spexregister runs as well.
+The project is `fgv-infra-local` and the shared network is `fgv-local`, which the `docker-compose.yaml` of
+`spexregister-server` and `fgv-revival-server` join. Running only one application is fine: start this stack
+and that application. FGV Revival shows spex as unavailable until Spexregister runs as well.
 
 Add to `/etc/hosts` (or the Windows equivalent):
 
 ```
-127.0.0.1 auth.fgv.local.nu mail.fgv.local.nu analytics.fgv.local.nu api.register.fgv.local.nu register.fgv.local.nu
+127.0.0.1 auth.fgv.local.nu mail.fgv.local.nu analytics.fgv.local.nu api.register.fgv.local.nu register.fgv.local.nu api.revival.fgv.local.nu revival.fgv.local.nu
 ```
 
 The secrets are files in `local/.docker/secrets/`, in git with the placeholder `CHANGE_ME`. Replace each one without
@@ -337,7 +336,7 @@ docker compose up -d && docker compose ps
   `docker compose down`, empty `local/.docker/keycloak-mysql/data` and start again.
 - `local/.env` sets the applications' local addresses, which the realm's redirect URIs and MCP audiences are made
   from: Spexregister's web on `http://localhost:3000`, FGV Revival's on `http://localhost:3001` and its MCP endpoint
-  on `http://localhost:8081/api/mcp`.
+  on `https://api.revival.fgv.local.nu:8443/api/mcp`.
 - Registration uses Cloudflare's Turnstile test keys, which always pass. To see a failed challenge, add
   `TURNSTILE_SECRET_KEY=2x0000000000000000000000000000000AA` to `local/.env` and run
   `docker compose up -d keycloak-server`.
@@ -350,7 +349,7 @@ docker compose up -d && docker compose ps
   operating system's trust store, and give it to tools that don't use that store, such as Node's
   `NODE_EXTRA_CA_CERTS`.
 - Caddy forwards `api.register.fgv.local.nu` to the `spexregister-api` container, or, when that isn't running, to
-  port 8080 on the host.
+  port 8080 on the host. Likewise `api.revival.fgv.local.nu` goes to `revival-api`, or to port 8081 on the host.
 
 ## Image tags
 

@@ -149,6 +149,7 @@ services:
           - mail.fgv.local.nu
           - analytics.fgv.local.nu
           - api.register.fgv.local.nu
+          - api.revival.fgv.local.nu
 
 volumes:
   keycloak_mysql_data:
