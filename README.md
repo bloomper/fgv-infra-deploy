@@ -79,7 +79,7 @@ use `restart: unless-stopped`.
 ## 2. Cloudflare
 
 The domain's DNS must be hosted on Cloudflare. Use single-level subdomains such as
-`register-staging-auth.example.org`. A name like `auth.register.example.org` is two levels deep, and the free
+`auth-staging.example.org`. A name like `auth.staging.example.org` is two levels deep, and the free
 Universal SSL certificate doesn't cover it.
 
 1. Networking → Tunnels → *Create a tunnel* → Cloudflared. Name it e.g. `fgv-infra-staging`. Each deploy
