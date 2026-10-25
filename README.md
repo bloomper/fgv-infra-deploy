@@ -8,7 +8,7 @@ statistics, the shared Docker network and, on staging, Mailpit. Each application
 |--------------------------|----------------------------------------------------------------|
 | `fgv-infra-deploy`       | Keycloak, Umami, their databases, the shared network, Mailpit on staging |
 | [spexregister-deploy][1] | Spexregister server, web and database                          |
-| [fgv-revival-deploy][2]  | Nyuppsättning server, web and database                           |
+| [fgv-revival-deploy][2]  | Nyuppsättning server, web and database                         |
 
 ```
 Browser ──https──▶ Cloudflare ──tunnel──▶ cloudflared ─┬─▶ keycloak-server:8080  (KEYCLOAK_HOST)
@@ -26,8 +26,8 @@ fgv-revival-deploy:  revival-web ───────┘
 ```
 
 This repository creates the Docker network `fgv-<DEPLOY_ENV>`. The applications' API containers join it to reach
-Keycloak as `keycloak-server:8080` (signing keys, admin API) and, on staging, Mailpit as `mailpit:1025`. FGV
-Revival also reaches Spexregister's API on it as `spexregister-api:8080`, and both applications' web containers
+Keycloak as `keycloak-server:8080` (signing keys, admin API) and, on staging, Mailpit as `mailpit:1025`.
+Nyuppsättning also reaches Spexregister's API on it as `spexregister-api:8080`, and both applications' web containers
 forward their visitor statistics to Umami as `umami-server:3000`. Browsers and the web containers use
 Keycloak's public address, `https://KEYCLOAK_HOST/auth`. Start this repository first. The applications refuse to start
 while the network is missing.
@@ -279,7 +279,7 @@ docker compose down -v                    # removes the volumes: Keycloak realm 
 ```
 
 Stop the applications first, since their containers are attached to the shared network. Then repeat *First start*.
-With `API_IMPORT_SAMPLE_DATA=true`, Spexregister creates its sample users again on its next start. The secrets in
+With sample data, Spexregister and then Nyuppsättning create their sample users again on their next start. The secrets in
 `secrets/` and the dumps in `backups/` are kept.
 
 ## Production
@@ -311,7 +311,7 @@ own database and API locally:
 
 The project is `fgv-infra-local` and the shared network is `fgv-local`, which the `docker-compose.yaml` of
 `spexregister-server` and `fgv-revival-server` join. Running only one application is fine: start this stack
-and that application. FGV Revival shows spex as unavailable until Spexregister runs as well.
+and that application. Nyuppsättning shows spex as unavailable until Spexregister runs as well.
 
 Add to `/etc/hosts` (or the Windows equivalent):
 
@@ -335,7 +335,7 @@ docker compose up -d && docker compose ps
   configuration already uses, so `bin/configure-keycloak.sh` isn't needed locally. To get a changed `fgv.json`, run
   `docker compose down`, empty `local/.docker/keycloak-mysql/data` and start again.
 - `local/.env` sets the applications' local addresses, which the realm's redirect URIs and MCP audiences are made
-  from: Spexregister's web on `http://localhost:3000`, FGV Revival's on `http://localhost:3001` and its MCP endpoint
+  from: Spexregister's web on `http://localhost:3000`, Nyuppsättning's on `http://localhost:3001` and its MCP endpoint
   on `https://api.revival.fgv.local.nu:8443/api/mcp`.
 - Registration uses Cloudflare's Turnstile test keys, which always pass. To see a failed challenge, add
   `TURNSTILE_SECRET_KEY=2x0000000000000000000000000000000AA` to `local/.env` and run
