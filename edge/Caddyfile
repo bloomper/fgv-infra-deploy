@@ -1,0 +1,49 @@
+{
+	email {$ACME_EMAIL}
+	# No admin endpoint is needed: the configuration changes only with this file
+	admin off
+}
+
+(security_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+}
+
+# Spexify: the web, and the API's Subsonic gateway for apps. The containers are reached on the shared network.
+{$SPEXIFY_WEB_HOST} {
+	import security_headers
+	encode zstd gzip
+
+	# Subsonic apps and streams; app passwords are checked by the API, which also limits failed logins
+	handle /rest/* {
+		request_body {
+			max_size 1MB
+		}
+		reverse_proxy spexify-api:8080 {
+			flush_interval -1
+		}
+	}
+	handle {
+		# tus chunks are at most 50 MB
+		request_body {
+			max_size 60MB
+		}
+		reverse_proxy spexify-web:3000 {
+			flush_interval -1
+		}
+	}
+}
+
+# Spexflix's media: renditions, thumbnails and subtitles, behind signed addresses checked by spexflix-media (nginx)
+{$SPEXFLIX_MEDIA_HOST} {
+	import security_headers
+	@unsafe not method GET HEAD OPTIONS
+	respond @unsafe 405
+	reverse_proxy spexflix-media:80 {
+		flush_interval -1
+	}
+}

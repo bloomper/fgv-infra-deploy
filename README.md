@@ -148,6 +148,9 @@ printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 | `FGV_REVIVAL_NAME`      | Name of the `fgv-revival` client                              |
 | `FGV_REVIVAL_WEB_HOST`  | Nyuppsättning's `WEB_HOST`                                      |
 | `FGV_REVIVAL_API_HOST`  | Nyuppsättning's `API_HOST`: audience in tokens for `fgv-revival-mcp` |
+| `SPEXIFY_NAME`, `SPEXIFY_WEB_HOST` | Name and `WEB_HOST` of Spexify (`fgv-spexify`), which Keycloak sends users back to |
+| `SPEXFLIX_NAME`, `SPEXFLIX_WEB_HOST` | Name and `WEB_HOST` of Spexflix (`fgv-spexflix`)              |
+| `SPEXFLIX_MEDIA_HOST`, `ACME_EMAIL` | For the edge proxy only, see *Edge proxy*                  |
 
 ## 4. First start
 
@@ -367,3 +370,25 @@ release tags are never overwritten.
 [2]: https://github.com/bloomper/fgv-revival-deploy
 [3]: https://github.com/bloomper/fgv-keycloak
 [4]: https://github.com/umami-software/umami
+
+## Edge proxy
+
+Spexify and Spexflix serve audio and video, which Cloudflare's CDN terms restrict on the free plans, so their media
+does not go through the Cloudflare Tunnel. `compose.edge.yaml` adds `edge-caddy`, which owns ports 80 and 443 and
+gets certificates from Let's Encrypt (`ACME_EMAIL`), for:
+
+| Hostname              | Routes                                                                                   |
+|-----------------------|------------------------------------------------------------------------------------------|
+| `SPEXIFY_WEB_HOST`    | `/rest/*` to `spexify-api:8080` (Subsonic apps), everything else to `spexify-web:3000`   |
+| `SPEXFLIX_MEDIA_HOST` | `spexflix-media:80`, GET and HEAD only; nginx checks the signed addresses                 |
+
+On a host that runs them:
+
+1. Point both hostnames at the host with **DNS-only** records (grey cloud) in Cloudflare. They then reveal the host's
+   address, and Cloudflare's DDoS protection does not cover them.
+2. Open only ports 80 and 443 in the firewall. MySQL, Navidrome and every other container publish no ports.
+3. Add `compose.edge.yaml` to `COMPOSE_FILE`, set `SPEXFLIX_MEDIA_HOST` and `ACME_EMAIL`, and
+   `docker compose up -d edge-caddy`. It starts before Spexify and Spexflix and answers 502 for them until they run.
+
+Spexflix's web and API stay on the tunnel; only its media hostname is here.
+
