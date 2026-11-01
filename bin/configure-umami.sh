@@ -19,12 +19,16 @@ if [[ ${1:-} == local ]]; then
   websites=(
     "${SPEXREGISTER_NAME:-Spexregister}" "$(host "$SPEXREGISTER_URL")" "Spexregister web's .env.local"
     "${FGV_REVIVAL_NAME:-Nyuppsättning}" "$(host "$FGV_REVIVAL_URL")" "Nyuppsättning web's .env.local"
+    "${SPEXIFY_NAME:-Spexify}" "$(host "${SPEXIFY_URL:-http://localhost:3002}")" "Spexify web's .env.local"
+    "${SPEXFLIX_NAME:-Spexflix}" "$(host "${SPEXFLIX_URL:-http://localhost:3003}")" "Spexflix web's .env.local"
   )
 else
   password=$(cat secrets/UMAMI_ADMIN_PASSWORD)
   websites=(
     "${SPEXREGISTER_NAME:-Spexregister}" "$SPEXREGISTER_WEB_HOST" "spexregister-deploy's .env"
     "${FGV_REVIVAL_NAME:-Nyuppsättning}" "$FGV_REVIVAL_WEB_HOST" "fgv-revival-deploy's .env"
+    "${SPEXIFY_NAME:-Spexify}" "$SPEXIFY_WEB_HOST" "fgv-spexify-deploy's .env"
+    "${SPEXFLIX_NAME:-Spexflix}" "$SPEXFLIX_WEB_HOST" "fgv-spexflix-deploy's .env"
   )
 fi
 

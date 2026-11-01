@@ -1,7 +1,6 @@
 # FGV Infra Deploy
 
-Docker Compose setup for the infrastructure that FGV's applications share on a single host, published through a
-Cloudflare Tunnel: Keycloak (realm `fgv`), which every FGV application logs in through, its MySQL, Umami for visitor
+Docker Compose setup for the infrastructure that FGV's applications share on a single host: Keycloak (realm `fgv`), which every FGV application logs in through, its MySQL, Umami for visitor
 statistics, the shared Docker network and, on staging, Mailpit. Each application has its own deploy repository:
 
 | Repository               | Runs                                                           |
@@ -10,7 +9,12 @@ statistics, the shared Docker network and, on staging, Mailpit. Each application
 | [spexregister-deploy][1] | Spexregister server, web and database                          |
 | [fgv-revival-deploy][2]  | Nyuppsättning server, web and database                         |
 
+Cloudflare is used on staging only. Staging is published through a Cloudflare Tunnel, as below; production uses no
+Cloudflare Tunnel, DNS or Access and sits behind its own reverse proxy instead (see *Production*). The one Cloudflare
+service both use is the Turnstile CAPTCHA on Keycloak's registration page.
+
 ```
+Staging:
 Browser ──https──▶ Cloudflare ──tunnel──▶ cloudflared ─┬─▶ keycloak-server:8080  (KEYCLOAK_HOST)
                                                        ├─▶ umami-server:3000     (ANALYTICS_HOST, dashboard only)
                                                        └─▶ mailpit:8025          (MAIL_HOST, staging only)
@@ -44,7 +48,7 @@ and the project's own network with them, e.g. `fgv-infra-staging_keycloak_mysql_
 | File                          | Purpose                                                                    |
 |-------------------------------|----------------------------------------------------------------------------|
 | `compose.yaml`                | Keycloak and MySQL, Umami and PostgreSQL, configured entirely from `.env`  |
-| `compose.tunnel.yaml`         | `cloudflared` connector, for hosts published through a Cloudflare Tunnel   |
+| `compose.tunnel.yaml`         | `cloudflared` connector for the Cloudflare Tunnel, staging only            |
 | `compose.staging.yaml`        | Staging additions: Mailpit catches all outgoing mail                       |
 | `staging.env.example`         | Template for `.env` on the staging host                                    |
 | `production.env.example`      | Template for `.env` on the production host                                 |
@@ -76,9 +80,12 @@ sudo apt install -y unattended-upgrades git
 In BIOS, set *Power → After Power Loss* to *Power On* so the box comes back after a power cut. All containers
 use `restart: unless-stopped`.
 
-## 2. Cloudflare
+## 2. Cloudflare (staging only)
 
-The domain's DNS must be hosted on Cloudflare. Use single-level subdomains such as
+Only staging uses Cloudflare; on production, skip steps 1–4 and point the hostnames in the table at production's
+reverse proxy (see *Production*). Step 5, Turnstile, applies to both.
+
+Staging's DNS must be hosted on Cloudflare. Use single-level subdomains such as
 `auth-staging.example.org`. A name like `auth.staging.example.org` is two levels deep, and the free
 Universal SSL certificate doesn't cover it.
 
@@ -96,7 +103,8 @@ Universal SSL certificate doesn't cover it.
    | `MAIL_HOST`      | `http://mailpit:8025` (staging only) |
 
 4. Restrict who can reach the admin console, Umami and Mailpit with Cloudflare Access. See *Cloudflare Access* below.
-5. Open *Turnstile* in the dashboard and select *Add widget*. Name it e.g. `keycloak-staging`, add `KEYCLOAK_HOST` as
+5. Staging and production: open *Turnstile* in the dashboard and select *Add widget*. Name it e.g.
+   `keycloak-staging` (one widget per environment), add `KEYCLOAK_HOST` as
    hostname and choose *Managed* as widget mode. Put the site key in `TURNSTILE_SITE_KEY` in `.env` and the
    secret key in `secrets/TURNSTILE_SECRET_KEY` (see section 3 below).
 
@@ -134,7 +142,7 @@ cd fgv-infra-deploy
 
 cp staging.env.example .env               # set the hostnames, email addresses and TURNSTILE_SITE_KEY
 bin/init-secrets.sh
-nano secrets/cloudflared.env              # TUNNEL_TOKEN=<token from step 2>
+nano secrets/cloudflared.env              # staging only: TUNNEL_TOKEN=<token from step 2>
 printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 ```
 
@@ -158,7 +166,7 @@ printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 docker compose up -d                      # Keycloak, Umami, their databases and, on staging, Mailpit
 docker compose ps keycloak-server         # wait for "healthy"
 bin/configure-keycloak.sh
-bin/configure-umami.sh                    # prints UMAMI_WEBSITE_ID for spexregister-deploy and fgv-revival-deploy
+bin/configure-umami.sh                    # prints UMAMI_WEBSITE_ID for each application's deploy repository
 ```
 
 Keycloak imports `fgv.json` only when the realm doesn't exist yet. Then `configure-keycloak.sh` makes these
@@ -180,8 +188,9 @@ Umami creates the user `admin` with password `umami` and has no setting to chang
 therefore runs inside the container, before the route is published:
 
 - changes `admin`'s password to `secrets/UMAMI_ADMIN_PASSWORD`, which `bin/init-secrets.sh` generates
-- adds a website `SPEXREGISTER_NAME` for `SPEXREGISTER_WEB_HOST` and one `FGV_REVIVAL_NAME` for
-  `FGV_REVIVAL_WEB_HOST`, unless they exist, and prints their IDs
+- adds a website per application, unless it exists, and prints their IDs: `SPEXREGISTER_NAME` for
+  `SPEXREGISTER_WEB_HOST`, `FGV_REVIVAL_NAME` for `FGV_REVIVAL_WEB_HOST`, `SPEXIFY_NAME` for `SPEXIFY_WEB_HOST` and
+  `SPEXFLIX_NAME` for `SPEXFLIX_WEB_HOST`
 
 Put each ID in its deploy repository's `.env` as `UMAMI_WEBSITE_ID` and recreate its web container. Without the ID the
 application sends nothing. You can run the script again safely. Once `admin` has two-factor authentication (under
@@ -191,7 +200,7 @@ under *Settings → Users* if others should see the statistics.
 Umami dashboard: `https://ANALYTICS_HOST`, user `admin`, password in `secrets/UMAMI_ADMIN_PASSWORD`.
 
 Umami sets no cookies and stores no IP addresses: a visitor is a hash of IP, browser and website with a salt that
-changes every month. Both applications also drop query strings, since Spexregister's searches can hold names and
+changes every month. The applications also drop query strings, since Spexregister's searches can hold names and
 personnummer.
 
 Keycloak admin console: `https://KEYCLOAK_HOST/auth/admin`, user `KEYCLOAK_ADMIN`, password in
@@ -294,11 +303,13 @@ A production host differs in these ways:
 - no sample users: the realm in the Keycloak image contains none
 - `bin/backup-db.sh` scheduled in cron, with `backups/` copied to off-host storage
 - `KEYCLOAK_IMAGE` pinned to a release, e.g. `bloomper/fgv-keycloak:1.1.0`, instead of `develop`, `UMAMI_IMAGE` to
-  an exact version such as `ghcr.io/umami-software/umami:3.4.0` (it migrates its database on start), and
-  `CLOUDFLARED_VERSION` pinned instead of `latest`, so that an update happens only when `.env` changes
-
-Add `compose.tunnel.yaml` to `COMPOSE_FILE` if production also goes through a Cloudflare Tunnel, using its own
-tunnel and token. Leave it out if production sits behind its own reverse proxy instead.
+  an exact version such as `ghcr.io/umami-software/umami:3.4.0` (it migrates its database on start), so that an
+  update happens only when `.env` changes
+- no Cloudflare: `COMPOSE_FILE` leaves out `compose.tunnel.yaml`, `secrets/cloudflared.env` stays empty, and there
+  is no Cloudflare Access. Production sits behind its own reverse proxy, which terminates TLS and forwards
+  `KEYCLOAK_HOST` to `keycloak-server:8080` and `ANALYTICS_HOST` to `umami-server:3000` (the table in section 2,
+  without Mailpit), and the hostnames in *Edge proxy*. Restrict Keycloak's admin console (`/auth/admin`) and Umami
+  there instead of with Access. Turnstile is used as on staging.
 
 ## Local development
 
@@ -310,16 +321,18 @@ own database and API locally:
 | `keycloak-server` | `https://auth.fgv.local.nu:8443/auth`, `keycloak-server:8080` on `fgv-local` |
 | `mailpit`         | `https://mail.fgv.local.nu:8443` or `http://localhost:8025`, SMTP on `mailpit:1025` and `localhost:1025` |
 | `umami-server`    | `https://analytics.fgv.local.nu:8443`, `umami-server:3000` on `fgv-local`  |
-| `caddy`           | Port 8443 with a local certificate, also for `api.register.fgv.local.nu` and `api.revival.fgv.local.nu` |
+| `caddy`           | Port 8443 with a local certificate, also for the applications' APIs and Spexflix's media server |
 
 The project is `fgv-infra-local` and the shared network is `fgv-local`, which the `docker-compose.yaml` of
-`spexregister-server` and `fgv-revival-server` join. Running only one application is fine: start this stack
-and that application. Nyuppsättning shows spex as unavailable until Spexregister runs as well.
+`spexregister-server`, `fgv-revival-server`, `fgv-spexify-server` and `fgv-spexflix-server` join. Running only one
+application is fine: start this stack and that application. Nyuppsättning shows spex as unavailable until Spexregister
+runs as well; Spexify's and Spexflix's sample data need Spexregister's.
 
 Add to `/etc/hosts` (or the Windows equivalent):
 
 ```
 127.0.0.1 auth.fgv.local.nu mail.fgv.local.nu analytics.fgv.local.nu api.register.fgv.local.nu register.fgv.local.nu api.revival.fgv.local.nu revival.fgv.local.nu
+127.0.0.1 api.spexify.fgv.local.nu spexify.fgv.local.nu api.spexflix.fgv.local.nu spexflix.fgv.local.nu media.spexflix.fgv.local.nu
 ```
 
 The secrets are files in `local/.docker/secrets/`, in git with the placeholder `CHANGE_ME`. Replace each one without
@@ -338,21 +351,25 @@ docker compose up -d && docker compose ps
   configuration already uses, so `bin/configure-keycloak.sh` isn't needed locally. To get a changed `fgv.json`, run
   `docker compose down`, empty `local/.docker/keycloak-mysql/data` and start again.
 - `local/.env` sets the applications' local addresses, which the realm's redirect URIs and MCP audiences are made
-  from: Spexregister's web on `http://localhost:3000`, Nyuppsättning's on `http://localhost:3001` and its MCP endpoint
-  on `https://api.revival.fgv.local.nu:8443/api/mcp`.
+  from: Spexregister's web on `http://localhost:3000`, Nyuppsättning's on `http://localhost:3001`, Spexify's on
+  `http://localhost:3002`, Spexflix's on `http://localhost:3003`, and the MCP endpoints of Spexregister and
+  Nyuppsättning.
 - Registration uses Cloudflare's Turnstile test keys, which always pass. To see a failed challenge, add
   `TURNSTILE_SECRET_KEY=2x0000000000000000000000000000000AA` to `local/.env` and run
   `docker compose up -d keycloak-server`.
 - Umami keeps user `admin` and password `umami` locally. `local/bin/configure-umami.sh` adds a website for the hosts
-  of `SPEXREGISTER_URL` and `FGV_REVIVAL_URL` (both `localhost`, told apart by name) and prints their IDs for
+  of `SPEXREGISTER_URL`, `FGV_REVIVAL_URL`, `SPEXIFY_URL` and `SPEXFLIX_URL` (all `localhost`, told apart by name) and
+  prints their IDs for
   `UMAMI_WEBSITE_ID` in each web's `.env.local`. Its
   database is in `local/.docker/umami-postgres/data`; empty that directory to start over. Browsers with *Do Not
-  Track* switched on send nothing, since both applications honour it.
+  Track* switched on send nothing, since the applications honour it.
 - Caddy's root certificate is `local/.docker/caddy/data/caddy/pki/authorities/local/root.crt`. Import it into the
   operating system's trust store, and give it to tools that don't use that store, such as Node's
   `NODE_EXTRA_CA_CERTS`.
 - Caddy forwards `api.register.fgv.local.nu` to the `spexregister-api` container, or, when that isn't running, to
-  port 8080 on the host. Likewise `api.revival.fgv.local.nu` goes to `revival-api`, or to port 8081 on the host.
+  port 8080 on the host. Likewise `api.revival.fgv.local.nu` goes to `revival-api` or port 8081,
+  `api.spexify.fgv.local.nu` to `spexify-api` or port 8082, `api.spexflix.fgv.local.nu` to `spexflix-api` or port
+  8083, and `media.spexflix.fgv.local.nu` to `spexflix-media` or port 8084.
 
 ## Image tags
 
@@ -373,8 +390,8 @@ release tags are never overwritten.
 
 ## Edge proxy
 
-Spexify and Spexflix serve audio and video, which Cloudflare's CDN terms restrict on the free plans, so their media
-does not go through the Cloudflare Tunnel. `compose.edge.yaml` adds `edge-caddy`, which owns ports 80 and 443 and
+On staging, Spexify and Spexflix serve audio and video, which Cloudflare's CDN terms restrict on the free plans, so
+their media does not go through the Cloudflare Tunnel. `compose.edge.yaml` adds `edge-caddy`, which owns ports 80 and 443 and
 gets certificates from Let's Encrypt (`ACME_EMAIL`), for:
 
 | Hostname              | Routes                                                                                   |
@@ -384,11 +401,13 @@ gets certificates from Let's Encrypt (`ACME_EMAIL`), for:
 
 On a host that runs them:
 
-1. Point both hostnames at the host with **DNS-only** records (grey cloud) in Cloudflare. They then reveal the host's
-   address, and Cloudflare's DDoS protection does not cover them.
+1. Point both hostnames at the host. On staging, use **DNS-only** records (grey cloud) in Cloudflare; they then reveal
+   the host's address, and Cloudflare's DDoS protection does not cover them.
 2. Open only ports 80 and 443 in the firewall. MySQL, Navidrome and every other container publish no ports.
 3. Add `compose.edge.yaml` to `COMPOSE_FILE`, set `SPEXFLIX_MEDIA_HOST` and `ACME_EMAIL`, and
    `docker compose up -d edge-caddy`. It starts before Spexify and Spexflix and answers 502 for them until they run.
 
-Spexflix's web and API stay on the tunnel; only its media hostname is here.
+On staging, Spexflix's web and API stay on the tunnel; only its media hostname is here. Production has no tunnel:
+its reverse proxy serves these routes as well, or it leaves ports 80 and 443 to `edge-caddy` and gets its other
+hostnames added to `edge/Caddyfile`.
 
