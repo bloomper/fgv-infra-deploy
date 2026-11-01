@@ -57,6 +57,10 @@ services:
       FGV_REVIVAL_NAME: ${FGV_REVIVAL_NAME:-Nyuppsättning}
       FGV_REVIVAL_URL: ${FGV_REVIVAL_URL}
       FGV_REVIVAL_MCP_URL: ${FGV_REVIVAL_MCP_URL}
+      SPEXIFY_NAME: ${SPEXIFY_NAME:-Spexify}
+      SPEXIFY_URL: ${SPEXIFY_URL:-http://localhost:3002}
+      SPEXFLIX_NAME: ${SPEXFLIX_NAME:-Spexflix}
+      SPEXFLIX_URL: ${SPEXFLIX_URL:-http://localhost:3003}
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
       SMTP_FROM: ${MAIL_FROM}

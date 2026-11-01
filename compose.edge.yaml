@@ -1,0 +1,34 @@
+# The edge proxy: Caddy on ports 80 and 443 for Spexify (its web, its API's Subsonic gateway and downloads) and
+# Spexflix's media hostname. TLS certificates come from Let's Encrypt. On staging these hostnames are DNS-only (not
+# proxied by Cloudflare), because they serve audio and video, which Cloudflare's CDN terms restrict on the free
+# plans; hostnames behind the staging Cloudflare Tunnel are unaffected. Production uses no Cloudflare (see README).
+# Add it to COMPOSE_FILE on the host that runs Spexify and Spexflix.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "5"
+
+services:
+  edge-caddy:
+    image: ${CADDY_IMAGE:-caddy:2.10}
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL must be set in .env}
+      SPEXIFY_WEB_HOST: ${SPEXIFY_WEB_HOST:?SPEXIFY_WEB_HOST must be set in .env}
+      SPEXFLIX_MEDIA_HOST: ${SPEXFLIX_MEDIA_HOST:?SPEXFLIX_MEDIA_HOST must be set in .env}
+    restart: unless-stopped
+    logging: *logging
+    volumes:
+      - ./edge/Caddyfile:/etc/caddy/Caddyfile:ro
+      - edge_caddy_data:/data
+      - edge_caddy_config:/config
+    networks:
+      - fgv
+
+volumes:
+  edge_caddy_data:
+  edge_caddy_config:
