@@ -174,6 +174,8 @@ changes:
 
 - sets the secret of each client in `secrets/clients/` (`fgv-admin`, `spexregister`, `fgv-revival`,
   `fgv-revival-service`). The secrets in `fgv.json` are public
+- gives the service account of `fgv-admin` the `realm-management` roles the applications need, including
+  `manage-events` so that loading sample data and migrating can turn off the event listener `fgv-admin-notification`
 - selects `KEYCLOAK_THEME` as the realm's login, account and email theme
 - sets the realm's mail settings from the `SMTP_*` variables, `MAIL_FROM` and `secrets/SMTP_PASSWORD`
 

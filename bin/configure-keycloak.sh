@@ -26,6 +26,16 @@ for secret in secrets/clients/*; do
   echo "updated $client secret"
 done
 
+admin_uuid=$(client_uuid fgv-admin)
+realm_management_uuid=$(client_uuid realm-management)
+for role in query-users manage-users view-users view-clients manage-events; do
+  kcadm add-roles -r "$KEYCLOAK_REALM" --uusername service-account-fgv-admin --cclientid realm-management --rolename "$role"
+  kcadm get "clients/$realm_management_uuid/roles/$role" -r "$KEYCLOAK_REALM" \
+    | sed '1s/^/[/; $s/$/]/' \
+    | kcadm create "clients/$admin_uuid/scope-mappings/clients/$realm_management_uuid" -r "$KEYCLOAK_REALM" -f -
+done
+echo "updated fgv-admin realm-management roles"
+
 if [[ -n "${KEYCLOAK_THEME:-}" ]]; then
   kcadm update "realms/$KEYCLOAK_REALM" -s "loginTheme=$KEYCLOAK_THEME" -s "accountTheme=$KEYCLOAK_THEME" -s "emailTheme=$KEYCLOAK_THEME"
   echo "updated login, account and email theme to $KEYCLOAK_THEME"
