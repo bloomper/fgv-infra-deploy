@@ -1,8 +1,7 @@
 # The edge proxy: Caddy on ports 80 and 443 for Spexify's API (Subsonic apps, the web player's audio, downloads and
-# /docs) and Spexflix's media hostname. TLS certificates come from Let's Encrypt. On staging these hostnames are DNS-only (not
-# proxied by Cloudflare), because they serve audio and video, which Cloudflare's CDN terms restrict on the free
-# plans; hostnames behind the staging Cloudflare Tunnel are unaffected. Production uses no Cloudflare (see README).
-# Add it to COMPOSE_FILE on the host that runs Spexify and Spexflix.
+# /docs) and Spexflix's media hostname. TLS certificates come from Let's Encrypt. Production only, on the host that
+# runs Spexify and Spexflix, when its own reverse proxy doesn't serve these hostnames (see README). Staging isn't
+# reachable from the internet and uses compose.tailnet.yaml instead.
 x-logging: &logging
   driver: json-file
   options:

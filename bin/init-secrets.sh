@@ -45,6 +45,11 @@ if [[ ! -s secrets/cloudflared.env ]]; then
   echo "created secrets/cloudflared.env (staging only: paste the tunnel token into it)"
 fi
 
+if [[ ! -s secrets/tailscale.env ]]; then
+  printf 'TS_AUTHKEY=\n' > secrets/tailscale.env
+  echo "created secrets/tailscale.env (staging only: paste the Tailscale auth key into it)"
+fi
+
 chmod 700 secrets secrets/clients
 find secrets -maxdepth 1 -type f ! -name '*.env' -exec chmod 644 {} +
 chmod 600 secrets/*.env secrets/clients/*
