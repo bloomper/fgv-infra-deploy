@@ -13,8 +13,9 @@
 	}
 }
 
-# Spexify: the web, and the API's Subsonic gateway for apps. The containers are reached on the shared network.
-{$SPEXIFY_WEB_HOST} {
+# Spexify's API: the Subsonic gateway for apps, the signed links to audio and downloads that the web redirects the
+# player to, /docs and GraphQL. The web itself is on the staging tunnel. The container is reached on the shared network.
+{$SPEXIFY_API_HOST} {
 	import security_headers
 	encode zstd gzip
 
@@ -28,11 +29,11 @@
 		}
 	}
 	handle {
-		# tus chunks are at most 50 MB
+		# tus chunks are at most 50 MB; the web sends them, but a client with a token may too
 		request_body {
 			max_size 60MB
 		}
-		reverse_proxy spexify-web:3000 {
+		reverse_proxy spexify-api:8080 {
 			flush_interval -1
 		}
 	}
