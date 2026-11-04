@@ -176,6 +176,9 @@ changes:
   `fgv-revival-service`). The secrets in `fgv.json` are public
 - gives the service account of `fgv-admin` the `realm-management` roles the applications need, including
   `manage-events` so that loading sample data and migrating can turn off the event listener `fgv-admin-notification`
+- maps each web client (`spexregister`, `fgv-revival`, `fgv-spexify`, `fgv-spexflix`) to the `USER` role of the
+  other three, so each web's application switcher lists the applications the user can open. A realm imported before
+  that mapping existed gets it from here
 - selects `KEYCLOAK_THEME` as the realm's login, account and email theme
 - sets the realm's mail settings from the `SMTP_*` variables, `MAIL_FROM` and `secrets/SMTP_PASSWORD`
 

@@ -36,6 +36,23 @@ for role in query-users manage-users view-users view-clients manage-events; do
 done
 echo "updated fgv-admin realm-management roles"
 
+web_clients=(spexregister fgv-revival fgv-spexify fgv-spexflix)
+for client in "${web_clients[@]}"; do
+  client_id=$(client_uuid "$client")
+  for other in "${web_clients[@]}"; do
+    [[ "$other" == "$client" ]] && continue
+    other_id=$(client_uuid "$other")
+    if [[ -z "$client_id" || -z "$other_id" ]]; then
+      echo "skipped $client scope mapping to $other: the realm has no such client"
+      continue
+    fi
+    kcadm get "clients/$other_id/roles/USER" -r "$KEYCLOAK_REALM" \
+      | sed '1s/^/[/; $s/$/]/' \
+      | kcadm create "clients/$client_id/scope-mappings/clients/$other_id" -r "$KEYCLOAK_REALM" -f -
+  done
+done
+echo "updated the web clients' scope mappings to each other's USER role"
+
 if [[ -n "${KEYCLOAK_THEME:-}" ]]; then
   kcadm update "realms/$KEYCLOAK_REALM" -s "loginTheme=$KEYCLOAK_THEME" -s "accountTheme=$KEYCLOAK_THEME" -s "emailTheme=$KEYCLOAK_THEME"
   echo "updated login, account and email theme to $KEYCLOAK_THEME"
