@@ -1,9 +1,10 @@
-# Staging only: Spexify's API and Spexflix's media server as nodes of the tailnet, reachable only by its members.
-# The staging host is not reachable from the internet, so these hostnames cannot be DNS-only records served by the
-# edge proxy, and audio and video must not go through the Cloudflare Tunnel (Cloudflare's CDN terms restrict them on
-# the free plans). Each container joins the tailnet as its own machine (spexify-api-staging, spexflix-media-staging),
-# gets a certificate for its <name>.<tailnet>.ts.net name and proxies HTTPS to the container on the shared network.
-# Nothing is published to the internet (no Funnel). Use it instead of compose.edge.yaml.
+# Staging only: Spexify's API and Spexflix's media server published to the internet with Tailscale Funnel. The
+# staging host is not reachable from the internet, so these hostnames cannot be DNS-only records served by the edge
+# proxy, and audio and video must not go through the Cloudflare Tunnel (Cloudflare's CDN terms restrict them on the
+# free plans). Each container joins the tailnet as its own tagged machine (spexify-api-staging,
+# spexflix-media-staging), gets a certificate for its <name>.<tailnet>.ts.net name, and Funnel publishes that name on
+# port 443, proxying HTTPS to the container on the shared network. Visitors need no Tailscale. Use it instead of
+# compose.edge.yaml.
 x-logging: &logging
   driver: json-file
   options:
