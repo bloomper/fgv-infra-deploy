@@ -1,0 +1,52 @@
+# Staging only: Spexify's API and Spexflix's media server as nodes of the tailnet, reachable only by its members.
+# The staging host is not reachable from the internet, so these hostnames cannot be DNS-only records served by the
+# edge proxy, and audio and video must not go through the Cloudflare Tunnel (Cloudflare's CDN terms restrict them on
+# the free plans). Each container joins the tailnet as its own machine (spexify-api-staging, spexflix-media-staging),
+# gets a certificate for its <name>.<tailnet>.ts.net name and proxies HTTPS to the container on the shared network.
+# Nothing is published to the internet (no Funnel). Use it instead of compose.edge.yaml.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "5"
+
+x-tailnet: &tailnet
+  image: ${TAILSCALE_IMAGE:-tailscale/tailscale:v1.104.1}
+  env_file:
+    - ./secrets/tailscale.env
+  restart: unless-stopped
+  logging: *logging
+  networks:
+    - fgv
+
+services:
+  tailnet-spexify-api:
+    <<: *tailnet
+    hostname: spexify-api-${DEPLOY_ENV}
+    environment:
+      TS_HOSTNAME: spexify-api-${DEPLOY_ENV}
+      TS_EXTRA_ARGS: --advertise-tags=${TAILNET_TAG:-tag:fgv-staging}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SERVE_CONFIG: /config/serve.json
+      TS_USERSPACE: "true"
+    volumes:
+      - tailnet_spexify_api_state:/var/lib/tailscale
+      # A directory, not the file, so that changes to it are picked up
+      - ./tailnet/spexify-api:/config:ro
+
+  tailnet-spexflix-media:
+    <<: *tailnet
+    hostname: spexflix-media-${DEPLOY_ENV}
+    environment:
+      TS_HOSTNAME: spexflix-media-${DEPLOY_ENV}
+      TS_EXTRA_ARGS: --advertise-tags=${TAILNET_TAG:-tag:fgv-staging}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SERVE_CONFIG: /config/serve.json
+      TS_USERSPACE: "true"
+    volumes:
+      - tailnet_spexflix_media_state:/var/lib/tailscale
+      - ./tailnet/spexflix-media:/config:ro
+
+volumes:
+  tailnet_spexify_api_state:
+  tailnet_spexflix_media_state:

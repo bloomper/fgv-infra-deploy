@@ -50,6 +50,8 @@ and the project's own network with them, e.g. `fgv-infra-staging_keycloak_mysql_
 | `compose.yaml`                | Keycloak and MySQL, Umami and PostgreSQL, configured entirely from `.env`  |
 | `compose.tunnel.yaml`         | `cloudflared` connector for the Cloudflare Tunnel, staging only            |
 | `compose.staging.yaml`        | Staging additions: Mailpit catches all outgoing mail                       |
+| `compose.tailnet.yaml`, `tailnet/` | Spexify's API and Spexflix's media server on the tailnet, staging only (see *Tailnet*) |
+| `compose.edge.yaml`, `edge/`  | The edge proxy for Spexify's API and Spexflix's media, production only (see *Edge proxy*) |
 | `staging.env.example`         | Template for `.env` on the staging host                                    |
 | `production.env.example`      | Template for `.env` on the production host                                 |
 | `bin/init-secrets.sh`         | Generates random secrets into `secrets/` (never overwrites existing ones)  |
@@ -143,6 +145,7 @@ cd fgv-infra-deploy
 cp staging.env.example .env               # set the hostnames, email addresses and TURNSTILE_SITE_KEY
 bin/init-secrets.sh
 nano secrets/cloudflared.env              # staging only: TUNNEL_TOKEN=<token from step 2>
+nano secrets/tailscale.env                # staging only: TS_AUTHKEY=<auth key, see Tailnet>
 printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 ```
 
@@ -158,7 +161,8 @@ printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 | `FGV_REVIVAL_API_HOST`  | Nyuppsättning's `API_HOST`: audience in tokens for `fgv-revival-mcp` |
 | `SPEXIFY_NAME`, `SPEXIFY_WEB_HOST` | Name and `WEB_HOST` of Spexify (`fgv-spexify`), which Keycloak sends users back to |
 | `SPEXFLIX_NAME`, `SPEXFLIX_WEB_HOST` | Name and `WEB_HOST` of Spexflix (`fgv-spexflix`)              |
-| `SPEXIFY_API_HOST`, `SPEXFLIX_MEDIA_HOST`, `ACME_EMAIL` | For the edge proxy only, see *Edge proxy* |
+| `TAILNET_TAG`, `TAILSCALE_IMAGE` | Staging only: the tailnet nodes, see *Tailnet*             |
+| `SPEXIFY_API_HOST`, `SPEXFLIX_MEDIA_HOST`, `ACME_EMAIL` | Production only: the edge proxy, see *Edge proxy* |
 
 ## 4. First start
 
@@ -393,11 +397,52 @@ release tags are never overwritten.
 [3]: https://github.com/bloomper/fgv-keycloak
 [4]: https://github.com/umami-software/umami
 
+## Tailnet (staging)
+
+Spexify and Spexflix serve audio and video, which Cloudflare's CDN terms restrict on the free plans, so it does not go
+through the Cloudflare Tunnel. The staging host is not reachable from the internet either, so instead Spexify's API
+and Spexflix's media server are machines of the tailnet, reachable only by its members. `compose.tailnet.yaml` adds
+two Tailscale containers on the shared network. Each joins the tailnet under its own name, gets a certificate for
+`<name>.<tailnet>.ts.net` and proxies HTTPS to its container (`tailnet/*/serve.json`). Nothing is published to the
+internet: Funnel is off.
+
+| Container                | Tailnet name             | Proxies to                                                          |
+|--------------------------|--------------------------|---------------------------------------------------------------------|
+| `tailnet-spexify-api`    | `spexify-api-staging`    | `spexify-api:8080`: Subsonic apps, signed links to audio and downloads, `/docs` |
+| `tailnet-spexflix-media` | `spexflix-media-staging` | `spexflix-media:80`; nginx checks the signed addresses              |
+
+```
+Browser ──https──▶ Cloudflare ──tunnel──▶ spexify-web, spexflix-web      (Cloudflare Access)
+Browser, Subsonic apps ──tailnet──▶ tailnet-spexify-api ──▶ spexify-api:8080
+Browser ──tailnet──▶ tailnet-spexflix-media ──▶ spexflix-media:80
+```
+
+Testers therefore need Tailscale on every device they listen or watch on, phones included, signed in to the tailnet.
+The webs work without it, but tracks and videos don't play. Set it up once in the Tailscale admin console:
+
+1. **DNS:** enable MagicDNS and *HTTPS Certificates*.
+2. **Access controls:** add the tag and allow testers to reach it on port 443 only, e.g.:
+   ```json
+   "tagOwners": {"tag:fgv-staging": ["autogroup:admin"]},
+   "grants": [{"src": ["group:fgv-testers"], "dst": ["tag:fgv-staging"], "ip": ["tcp:443"]}]
+   ```
+   with the testers in `group:fgv-testers`. Invite them to the tailnet as users.
+3. **Keys:** generate an auth key (*Settings → Keys*), reusable, with the tag `tag:fgv-staging`. Tagged nodes don't
+   expire. Put it in `secrets/tailscale.env` as `TS_AUTHKEY=<key>`. It is needed only for the first start; the nodes
+   keep their identity in the volumes `tailnet_*_state`.
+4. `docker compose up -d tailnet-spexify-api tailnet-spexflix-media`. The containers answer 502 until Spexify and
+   Spexflix run.
+5. Note the full names, e.g. `spexify-api-staging.tail1234.ts.net`. They are `API_HOST` in `fgv-spexify-deploy`'s
+   `.env` and `MEDIA_HOST` in `fgv-spexflix-deploy`'s.
+
+Removing a node in the admin console, or the volume, makes it join again under a new name if the old one is taken
+(`-1` appended); delete the old machine first.
+
 ## Edge proxy
 
-On staging, Spexify and Spexflix serve audio and video, which Cloudflare's CDN terms restrict on the free plans, so
-their media does not go through the Cloudflare Tunnel. `compose.edge.yaml` adds `edge-caddy`, which owns ports 80 and 443 and
-gets certificates from Let's Encrypt (`ACME_EMAIL`), for:
+On production, Spexify's API and Spexflix's media are served straight from the host: Cloudflare is not used there,
+and audio and video stay out of any CDN. `compose.edge.yaml` adds `edge-caddy`, which owns ports 80 and 443 and gets
+certificates from Let's Encrypt (`ACME_EMAIL`), for:
 
 | Hostname              | Routes                                                                                   |
 |-----------------------|------------------------------------------------------------------------------------------|
@@ -406,14 +451,10 @@ gets certificates from Let's Encrypt (`ACME_EMAIL`), for:
 
 On a host that runs them:
 
-1. Point both hostnames at the host. On staging, use **DNS-only** records (grey cloud) in Cloudflare; they then reveal
-   the host's address, and Cloudflare's DDoS protection does not cover them.
+1. Point both hostnames at the host.
 2. Open only ports 80 and 443 in the firewall. MySQL, Navidrome and every other container publish no ports.
 3. Add `compose.edge.yaml` to `COMPOSE_FILE`, set `SPEXIFY_API_HOST`, `SPEXFLIX_MEDIA_HOST` and `ACME_EMAIL`, and
    `docker compose up -d edge-caddy`. It starts before Spexify and Spexflix and answers 502 for them until they run.
 
-On staging, the webs of Spexify and Spexflix, and Spexflix's API, stay on their tunnels; only Spexify's API and
-Spexflix's media hostname are here. Production has no tunnel:
-its reverse proxy serves these routes as well, or it leaves ports 80 and 443 to `edge-caddy` and gets its other
-hostnames added to `edge/Caddyfile`.
-
+Production's own reverse proxy can serve these routes instead, or it leaves ports 80 and 443 to `edge-caddy` and gets
+its other hostnames added to `edge/Caddyfile`.
