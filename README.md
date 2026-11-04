@@ -158,7 +158,7 @@ printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 | `FGV_REVIVAL_API_HOST`  | Nyuppsättning's `API_HOST`: audience in tokens for `fgv-revival-mcp` |
 | `SPEXIFY_NAME`, `SPEXIFY_WEB_HOST` | Name and `WEB_HOST` of Spexify (`fgv-spexify`), which Keycloak sends users back to |
 | `SPEXFLIX_NAME`, `SPEXFLIX_WEB_HOST` | Name and `WEB_HOST` of Spexflix (`fgv-spexflix`)              |
-| `SPEXFLIX_MEDIA_HOST`, `ACME_EMAIL` | For the edge proxy only, see *Edge proxy*                  |
+| `SPEXIFY_API_HOST`, `SPEXFLIX_MEDIA_HOST`, `ACME_EMAIL` | For the edge proxy only, see *Edge proxy* |
 
 ## 4. First start
 
@@ -398,7 +398,7 @@ gets certificates from Let's Encrypt (`ACME_EMAIL`), for:
 
 | Hostname              | Routes                                                                                   |
 |-----------------------|------------------------------------------------------------------------------------------|
-| `SPEXIFY_WEB_HOST`    | `/rest/*` to `spexify-api:8080` (Subsonic apps), everything else to `spexify-web:3000`   |
+| `SPEXIFY_API_HOST`    | `spexify-api:8080`: Subsonic apps (`/rest/*`), signed links to audio and downloads (`/media/*`), `/docs` |
 | `SPEXFLIX_MEDIA_HOST` | `spexflix-media:80`, GET and HEAD only; nginx checks the signed addresses                 |
 
 On a host that runs them:
@@ -406,10 +406,11 @@ On a host that runs them:
 1. Point both hostnames at the host. On staging, use **DNS-only** records (grey cloud) in Cloudflare; they then reveal
    the host's address, and Cloudflare's DDoS protection does not cover them.
 2. Open only ports 80 and 443 in the firewall. MySQL, Navidrome and every other container publish no ports.
-3. Add `compose.edge.yaml` to `COMPOSE_FILE`, set `SPEXFLIX_MEDIA_HOST` and `ACME_EMAIL`, and
+3. Add `compose.edge.yaml` to `COMPOSE_FILE`, set `SPEXIFY_API_HOST`, `SPEXFLIX_MEDIA_HOST` and `ACME_EMAIL`, and
    `docker compose up -d edge-caddy`. It starts before Spexify and Spexflix and answers 502 for them until they run.
 
-On staging, Spexflix's web and API stay on the tunnel; only its media hostname is here. Production has no tunnel:
+On staging, the webs of Spexify and Spexflix, and Spexflix's API, stay on their tunnels; only Spexify's API and
+Spexflix's media hostname are here. Production has no tunnel:
 its reverse proxy serves these routes as well, or it leaves ports 80 and 443 to `edge-caddy` and gets its other
 hostnames added to `edge/Caddyfile`.
 
