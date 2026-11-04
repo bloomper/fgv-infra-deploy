@@ -422,11 +422,13 @@ Browser ──https──▶ Tailscale Funnel ──▶ tailnet-spexflix-media �
 Set it up once in the Tailscale admin console:
 
 1. **DNS:** enable MagicDNS and *HTTPS Certificates*.
-2. **Access controls:** own the tag and let its machines use Funnel:
-   ```json
-   "tagOwners": {"tag:fgv-staging": ["autogroup:admin"]},
-   "nodeAttrs": [{"target": ["tag:fgv-staging"], "attr": ["funnel"]}]
-   ```
+2. **Access controls** (the visual editor):
+   - *Tags*: add `fgv-staging`, owned by admins (`autogroup:admin`).
+   - *Node attributes*: add the attribute `funnel` with the target `tag:fgv-staging`. *Add Funnel to policy* alone is
+     not enough: it covers tailnet members, not tagged machines.
+
+   In the JSON editor, the same is `"tagOwners": {"tag:fgv-staging": ["autogroup:admin"]}` and
+   `"nodeAttrs": [{"target": ["tag:fgv-staging"], "attr": ["funnel"]}]`.
 3. **Keys:** generate an auth key (*Settings → Keys*), **reusable** (both containers use it), with the tag
    `tag:fgv-staging`. Tagged machines don't expire. Put it in `secrets/tailscale.env` as `TS_AUTHKEY=tskey-auth-…`,
    without quotes. It is needed only for the first start; the machines keep their identity in the volumes
