@@ -66,6 +66,10 @@ services:
       SPEXIFY_URL: https://${SPEXIFY_WEB_HOST:?SPEXIFY_WEB_HOST must be set in .env}
       SPEXFLIX_NAME: ${SPEXFLIX_NAME:-Spexflix}
       SPEXFLIX_URL: https://${SPEXFLIX_WEB_HOST:?SPEXFLIX_WEB_HOST must be set in .env}
+      SPEXGRAM_NAME: ${SPEXGRAM_NAME:-Spexgram}
+      SPEXGRAM_URL: https://${SPEXGRAM_WEB_HOST:?SPEXGRAM_WEB_HOST must be set in .env}
+      ARCHIVE_NAME: ${ARCHIVE_NAME:-Spexarkivet}
+      ARCHIVE_URL: https://${ARCHIVE_WEB_HOST:?ARCHIVE_WEB_HOST must be set in .env}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_FROM: ${MAIL_FROM}

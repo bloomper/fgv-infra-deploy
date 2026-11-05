@@ -26,7 +26,8 @@ generate UMAMI_APP_SECRET "$(random 48)"
 generate UMAMI_TWO_FACTOR_ENCRYPTION_KEY "$(openssl rand -hex 32)"
 
 # Client secrets, set in the realm by bin/configure-keycloak.sh and copied by the applications' bin/init-secrets.sh
-for client in fgv-admin spexregister fgv-revival fgv-revival-service fgv-spexify fgv-spexify-service fgv-spexflix fgv-spexflix-service; do
+for client in fgv-admin spexregister fgv-revival fgv-revival-service fgv-spexify fgv-spexify-service fgv-spexflix fgv-spexflix-service \
+    fgv-spexgram fgv-spexgram-service fgv-archive fgv-archive-service; do
   generate "clients/$client" "$(random 32)"
 done
 

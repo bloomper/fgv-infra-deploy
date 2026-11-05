@@ -36,7 +36,7 @@ for role in query-users manage-users view-users view-clients manage-events; do
 done
 echo "updated fgv-admin realm-management roles"
 
-web_clients=(spexregister fgv-revival fgv-spexify fgv-spexflix)
+web_clients=(spexregister fgv-revival fgv-spexify fgv-spexflix fgv-spexgram fgv-archive)
 for client in "${web_clients[@]}"; do
   client_id=$(client_uuid "$client")
   for other in "${web_clients[@]}"; do

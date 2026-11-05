@@ -48,3 +48,13 @@
 		flush_interval -1
 	}
 }
+
+# Spexgram's media: originals, previews, thumbnails and video, behind signed addresses checked by spexgram-media (nginx)
+{$SPEXGRAM_MEDIA_HOST} {
+	import security_headers
+	@unsafe not method GET HEAD OPTIONS
+	respond @unsafe 405
+	reverse_proxy spexgram-media:80 {
+		flush_interval -1
+	}
+}

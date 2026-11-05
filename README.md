@@ -50,8 +50,8 @@ and the project's own network with them, e.g. `fgv-infra-staging_keycloak_mysql_
 | `compose.yaml`                | Keycloak and MySQL, Umami and PostgreSQL, configured entirely from `.env`  |
 | `compose.tunnel.yaml`         | `cloudflared` connector for the Cloudflare Tunnel, staging only            |
 | `compose.staging.yaml`        | Staging additions: Mailpit catches all outgoing mail                       |
-| `compose.tailnet.yaml`, `tailnet/` | Spexify's API and Spexflix's media server published with Tailscale Funnel, staging only (see *Tailnet*) |
-| `compose.edge.yaml`, `edge/`  | The edge proxy for Spexify's API and Spexflix's media, production only (see *Edge proxy*) |
+| `compose.tailnet.yaml`, `tailnet/` | Spexify's API and Spexflix's and Spexgram's media servers published with Tailscale Funnel, staging only (see *Tailnet*) |
+| `compose.edge.yaml`, `edge/`  | The edge proxy for Spexify's API and Spexflix's and Spexgram's media, production only (see *Edge proxy*) |
 | `staging.env.example`         | Template for `.env` on the staging host                                    |
 | `production.env.example`      | Template for `.env` on the production host                                 |
 | `bin/init-secrets.sh`         | Generates random secrets into `secrets/` (never overwrites existing ones)  |
@@ -161,8 +161,10 @@ printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 | `FGV_REVIVAL_API_HOST`  | Nyuppsättning's `API_HOST`: audience in tokens for `fgv-revival-mcp` |
 | `SPEXIFY_NAME`, `SPEXIFY_WEB_HOST` | Name and `WEB_HOST` of Spexify (`fgv-spexify`), which Keycloak sends users back to |
 | `SPEXFLIX_NAME`, `SPEXFLIX_WEB_HOST` | Name and `WEB_HOST` of Spexflix (`fgv-spexflix`)              |
+| `SPEXGRAM_NAME`, `SPEXGRAM_WEB_HOST` | Name and `WEB_HOST` of Spexgram (`fgv-spexgram`)              |
+| `ARCHIVE_NAME`, `ARCHIVE_WEB_HOST` | Name and `WEB_HOST` of Spexarkivet (`fgv-archive`)              |
 | `TAILNET_TAG`, `TAILSCALE_IMAGE` | Staging only: the Funnel machines, see *Tailnet*           |
-| `SPEXIFY_API_HOST`, `SPEXFLIX_MEDIA_HOST`, `ACME_EMAIL` | Production only: the edge proxy, see *Edge proxy* |
+| `SPEXIFY_API_HOST`, `SPEXFLIX_MEDIA_HOST`, `SPEXGRAM_MEDIA_HOST`, `ACME_EMAIL` | Production only: the edge proxy, see *Edge proxy* |
 
 ## 4. First start
 
@@ -180,8 +182,8 @@ changes:
   `fgv-revival-service`). The secrets in `fgv.json` are public
 - gives the service account of `fgv-admin` the `realm-management` roles the applications need, including
   `manage-events` so that loading sample data and migrating can turn off the event listener `fgv-admin-notification`
-- maps each web client (`spexregister`, `fgv-revival`, `fgv-spexify`, `fgv-spexflix`) to the `USER` role of the
-  other three, so each web's application switcher lists the applications the user can open. A realm imported before
+- maps each web client (`spexregister`, `fgv-revival`, `fgv-spexify`, `fgv-spexflix`, `fgv-spexgram`, `fgv-archive`)
+  to the `USER` role of the others, so each web's application switcher lists the applications the user can open. A realm imported before
   that mapping existed gets it from here
 - selects `KEYCLOAK_THEME` as the realm's login, account and email theme
 - sets the realm's mail settings from the `SMTP_*` variables, `MAIL_FROM` and `secrets/SMTP_PASSWORD`
@@ -198,8 +200,9 @@ therefore runs inside the container, before the route is published:
 
 - changes `admin`'s password to `secrets/UMAMI_ADMIN_PASSWORD`, which `bin/init-secrets.sh` generates
 - adds a website per application, unless it exists, and prints their IDs: `SPEXREGISTER_NAME` for
-  `SPEXREGISTER_WEB_HOST`, `FGV_REVIVAL_NAME` for `FGV_REVIVAL_WEB_HOST`, `SPEXIFY_NAME` for `SPEXIFY_WEB_HOST` and
-  `SPEXFLIX_NAME` for `SPEXFLIX_WEB_HOST`
+  `SPEXREGISTER_WEB_HOST`, `FGV_REVIVAL_NAME` for `FGV_REVIVAL_WEB_HOST`, `SPEXIFY_NAME` for `SPEXIFY_WEB_HOST`,
+  `SPEXFLIX_NAME` for `SPEXFLIX_WEB_HOST`, `SPEXGRAM_NAME` for `SPEXGRAM_WEB_HOST` and `ARCHIVE_NAME` for
+  `ARCHIVE_WEB_HOST`
 
 Put each ID in its deploy repository's `.env` as `UMAMI_WEBSITE_ID` and recreate its web container. Without the ID the
 application sends nothing. You can run the script again safely. Once `admin` has two-factor authentication (under
@@ -330,10 +333,11 @@ own database and API locally:
 | `keycloak-server` | `https://auth.fgv.local.nu:8443/auth`, `keycloak-server:8080` on `fgv-local` |
 | `mailpit`         | `https://mail.fgv.local.nu:8443` or `http://localhost:8025`, SMTP on `mailpit:1025` and `localhost:1025` |
 | `umami-server`    | `https://analytics.fgv.local.nu:8443`, `umami-server:3000` on `fgv-local`  |
-| `caddy`           | Port 8443 with a local certificate, also for the applications' APIs and Spexflix's media server |
+| `caddy`           | Port 8443 with a local certificate, also for the applications' APIs and Spexflix's and Spexgram's media servers |
 
 The project is `fgv-infra-local` and the shared network is `fgv-local`, which the `docker-compose.yaml` of
-`spexregister-server`, `fgv-revival-server`, `fgv-spexify-server` and `fgv-spexflix-server` join. Running only one
+`spexregister-server`, `fgv-revival-server`, `fgv-spexify-server`, `fgv-spexflix-server`, `fgv-spexgram-server` and
+`fgv-archive-server` join. Running only one
 application is fine: start this stack and that application. Nyuppsättning shows spex as unavailable until Spexregister
 runs as well; Spexify's and Spexflix's sample data need Spexregister's.
 
@@ -342,6 +346,7 @@ Add to `/etc/hosts` (or the Windows equivalent):
 ```
 127.0.0.1 auth.fgv.local.nu mail.fgv.local.nu analytics.fgv.local.nu api.register.fgv.local.nu register.fgv.local.nu api.revival.fgv.local.nu revival.fgv.local.nu
 127.0.0.1 api.spexify.fgv.local.nu spexify.fgv.local.nu api.spexflix.fgv.local.nu spexflix.fgv.local.nu media.spexflix.fgv.local.nu
+127.0.0.1 api.spexgram.fgv.local.nu spexgram.fgv.local.nu media.spexgram.fgv.local.nu api.archive.fgv.local.nu archive.fgv.local.nu
 ```
 
 The secrets are files in `local/.docker/secrets/`, in git with the placeholder `CHANGE_ME`. Replace each one without
@@ -361,13 +366,14 @@ docker compose up -d && docker compose ps
   `docker compose down`, empty `local/.docker/keycloak-mysql/data` and start again.
 - `local/.env` sets the applications' local addresses, which the realm's redirect URIs and MCP audiences are made
   from: Spexregister's web on `http://localhost:3000`, Nyuppsättning's on `http://localhost:3001`, Spexify's on
-  `http://localhost:3002`, Spexflix's on `http://localhost:3003`, and the MCP endpoints of Spexregister and
+  `http://localhost:3002`, Spexflix's on `http://localhost:3003`, Spexgram's on `http://localhost:3004`, Spexarkivet's on
+  `http://localhost:3005`, and the MCP endpoints of Spexregister and
   Nyuppsättning.
 - Registration uses Cloudflare's Turnstile test keys, which always pass. To see a failed challenge, add
   `TURNSTILE_SECRET_KEY=2x0000000000000000000000000000000AA` to `local/.env` and run
   `docker compose up -d keycloak-server`.
 - Umami keeps user `admin` and password `umami` locally. `local/bin/configure-umami.sh` adds a website for the hosts
-  of `SPEXREGISTER_URL`, `FGV_REVIVAL_URL`, `SPEXIFY_URL` and `SPEXFLIX_URL` (all `localhost`, told apart by name) and
+  of `SPEXREGISTER_URL`, `FGV_REVIVAL_URL`, `SPEXIFY_URL`, `SPEXFLIX_URL`, `SPEXGRAM_URL` and `ARCHIVE_URL` (all `localhost`, told apart by name) and
   prints their IDs for
   `UMAMI_WEBSITE_ID` in each web's `.env.local`. Its
   database is in `local/.docker/umami-postgres/data`; empty that directory to start over. Browsers with *Do Not
@@ -378,7 +384,9 @@ docker compose up -d && docker compose ps
 - Caddy forwards `api.register.fgv.local.nu` to the `spexregister-api` container, or, when that isn't running, to
   port 8080 on the host. Likewise `api.revival.fgv.local.nu` goes to `revival-api` or port 8081,
   `api.spexify.fgv.local.nu` to `spexify-api` or port 8082, `api.spexflix.fgv.local.nu` to `spexflix-api` or port
-  8083, and `media.spexflix.fgv.local.nu` to `spexflix-media` or port 8084.
+  8083, `media.spexflix.fgv.local.nu` to `spexflix-media` or port 8084, `api.spexgram.fgv.local.nu` to `spexgram-api`
+  or port 8085, `media.spexgram.fgv.local.nu` to `spexgram-media` or port 8086, and `api.archive.fgv.local.nu` to
+  `archive-api` or port 8087.
 
 ## Image tags
 
@@ -400,10 +408,10 @@ release tags are never overwritten.
 
 ## Tailnet (staging)
 
-Spexify and Spexflix serve audio and video, which Cloudflare's CDN terms restrict on the free plans, so it does not go
-through the Cloudflare Tunnel. The staging host is not reachable from the internet either, so Spexify's API and
-Spexflix's media server are published with [Tailscale Funnel][5] instead. `compose.tailnet.yaml` adds two Tailscale
-containers on the shared network. Each joins the tailnet as its own tagged machine, gets a certificate for
+Spexify, Spexflix and Spexgram serve audio and video, which Cloudflare's CDN terms restrict on the free plans, so it
+does not go through the Cloudflare Tunnel. The staging host is not reachable from the internet either, so Spexify's
+API and Spexflix's and Spexgram's media servers are published with [Tailscale Funnel][5] instead.
+`compose.tailnet.yaml` adds three Tailscale containers on the shared network. Each joins the tailnet as its own tagged machine, gets a certificate for
 `<name>.<tailnet>.ts.net`, and Funnel publishes that name on port 443 and proxies to its container
 (`tailnet/*/serve.json`). Visitors, and Subsonic apps, need no Tailscale, and testers are not tailnet users: tagged
 machines take no user seats.
@@ -412,11 +420,13 @@ machines take no user seats.
 |--------------------------|--------------------------|---------------------------------------------------------------------|
 | `tailnet-spexify-api`    | `spexify-api-staging`    | `spexify-api:8080`: Subsonic apps, signed links to audio and downloads, `/docs` |
 | `tailnet-spexflix-media` | `spexflix-media-staging` | `spexflix-media:80`; nginx checks the signed addresses              |
+| `tailnet-spexgram-media` | `spexgram-media-staging` | `spexgram-media:80`; nginx checks the signed addresses              |
 
 ```
-Browser ──https──▶ Cloudflare ──tunnel──▶ spexify-web, spexflix-web              (Cloudflare Access)
+Browser ──https──▶ Cloudflare ──tunnel──▶ spexify-web, spexflix-web, spexgram-web (Cloudflare Access)
 Browser, Subsonic apps ──https──▶ Tailscale Funnel ──▶ tailnet-spexify-api ──▶ spexify-api:8080
 Browser ──https──▶ Tailscale Funnel ──▶ tailnet-spexflix-media ──▶ spexflix-media:80
+Browser ──https──▶ Tailscale Funnel ──▶ tailnet-spexgram-media ──▶ spexgram-media:80
 ```
 
 Set it up once in the Tailscale admin console:
@@ -429,14 +439,14 @@ Set it up once in the Tailscale admin console:
 
    In the JSON editor, the same is `"tagOwners": {"tag:fgv-staging": ["autogroup:admin"]}` and
    `"nodeAttrs": [{"target": ["tag:fgv-staging"], "attr": ["funnel"]}]`.
-3. **Keys:** generate an auth key (*Settings → Keys*), **reusable** (both containers use it), with the tag
+3. **Keys:** generate an auth key (*Settings → Keys*), **reusable** (all containers use it), with the tag
    `tag:fgv-staging`. Tagged machines don't expire. Put it in `secrets/tailscale.env` as `TS_AUTHKEY=tskey-auth-…`,
    without quotes. It is needed only for the first start; the machines keep their identity in the volumes
    `tailnet_*_state`.
-4. `docker compose up -d tailnet-spexify-api tailnet-spexflix-media`, then check with
-   `docker compose logs tailnet-spexify-api` that it logged in. The names answer 502 until Spexify and Spexflix run.
+4. `docker compose up -d tailnet-spexify-api tailnet-spexflix-media tailnet-spexgram-media`, then check with
+   `docker compose logs tailnet-spexify-api` that it logged in. The names answer 502 until the applications run.
 5. Note the full names, e.g. `spexify-api-staging.tail1234.ts.net`. They are `API_HOST` in `fgv-spexify-deploy`'s
-   `.env` and `MEDIA_HOST` in `fgv-spexflix-deploy`'s.
+   `.env` and `MEDIA_HOST` in `fgv-spexflix-deploy`'s and `fgv-spexgram-deploy`'s.
 
 Funnel's traffic has bandwidth limits that Tailscale does not publish or let you change: enough for audio and a few
 testers watching video, not for an audience. Funnel names are public, like DNS-only records, so the API still requires
@@ -447,7 +457,7 @@ admin console makes it join again under a new name (`-1` appended) if the old on
 
 ## Edge proxy
 
-On production, Spexify's API and Spexflix's media are served straight from the host: Cloudflare is not used there,
+On production, Spexify's API and Spexflix's and Spexgram's media are served straight from the host: Cloudflare is not used there,
 and audio and video stay out of any CDN. `compose.edge.yaml` adds `edge-caddy`, which owns ports 80 and 443 and gets
 certificates from Let's Encrypt (`ACME_EMAIL`), for:
 
@@ -455,13 +465,15 @@ certificates from Let's Encrypt (`ACME_EMAIL`), for:
 |-----------------------|------------------------------------------------------------------------------------------|
 | `SPEXIFY_API_HOST`    | `spexify-api:8080`: Subsonic apps (`/rest/*`), signed links to audio and downloads (`/media/*`), `/docs` |
 | `SPEXFLIX_MEDIA_HOST` | `spexflix-media:80`, GET and HEAD only; nginx checks the signed addresses                 |
+| `SPEXGRAM_MEDIA_HOST` | `spexgram-media:80`, GET and HEAD only; nginx checks the signed addresses                 |
 
 On a host that runs them:
 
-1. Point both hostnames at the host.
+1. Point the hostnames at the host.
 2. Open only ports 80 and 443 in the firewall. MySQL, Navidrome and every other container publish no ports.
-3. Add `compose.edge.yaml` to `COMPOSE_FILE`, set `SPEXIFY_API_HOST`, `SPEXFLIX_MEDIA_HOST` and `ACME_EMAIL`, and
-   `docker compose up -d edge-caddy`. It starts before Spexify and Spexflix and answers 502 for them until they run.
+3. Add `compose.edge.yaml` to `COMPOSE_FILE`, set `SPEXIFY_API_HOST`, `SPEXFLIX_MEDIA_HOST`, `SPEXGRAM_MEDIA_HOST`
+   and `ACME_EMAIL`, and `docker compose up -d edge-caddy`. It starts before the applications and answers 502 for
+   them until they run.
 
 Production's own reverse proxy can serve these routes instead, or it leaves ports 80 and 443 to `edge-caddy` and gets
 its other hostnames added to `edge/Caddyfile`.
