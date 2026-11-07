@@ -1,8 +1,9 @@
-# Staging only: Spexify's API and Spexflix's media server published to the internet with Tailscale Funnel. The
+# Staging only: Spexify's API and Spexflix's and Spexgram's media servers published to the internet with Tailscale
+# Funnel. The
 # staging host is not reachable from the internet, so these hostnames cannot be DNS-only records served by the edge
 # proxy, and audio and video must not go through the Cloudflare Tunnel (Cloudflare's CDN terms restrict them on the
 # free plans). Each container joins the tailnet as its own tagged machine (spexify-api-staging,
-# spexflix-media-staging), gets a certificate for its <name>.<tailnet>.ts.net name, and Funnel publishes that name on
+# spexflix-media-staging, spexgram-media-staging), gets a certificate for its <name>.<tailnet>.ts.net name, and Funnel publishes that name on
 # port 443, proxying HTTPS to the container on the shared network. Visitors need no Tailscale. Use it instead of
 # compose.edge.yaml.
 x-logging: &logging
@@ -48,6 +49,20 @@ services:
       - tailnet_spexflix_media_state:/var/lib/tailscale
       - ./tailnet/spexflix-media:/config:ro
 
+  tailnet-spexgram-media:
+    <<: *tailnet
+    hostname: spexgram-media-${DEPLOY_ENV}
+    environment:
+      TS_HOSTNAME: spexgram-media-${DEPLOY_ENV}
+      TS_EXTRA_ARGS: --advertise-tags=${TAILNET_TAG:-tag:fgv-staging}
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_SERVE_CONFIG: /config/serve.json
+      TS_USERSPACE: "true"
+    volumes:
+      - tailnet_spexgram_media_state:/var/lib/tailscale
+      - ./tailnet/spexgram-media:/config:ro
+
 volumes:
   tailnet_spexify_api_state:
   tailnet_spexflix_media_state:
+  tailnet_spexgram_media_state:

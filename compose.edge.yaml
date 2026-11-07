@@ -1,7 +1,8 @@
 # The edge proxy: Caddy on ports 80 and 443 for Spexify's API (Subsonic apps, the web player's audio, downloads and
-# /docs) and Spexflix's media hostname. TLS certificates come from Let's Encrypt. Production only, on the host that
-# runs Spexify and Spexflix, when its own reverse proxy doesn't serve these hostnames (see README). Staging isn't
-# reachable from the internet and uses compose.tailnet.yaml instead.
+# /docs) and Spexflix's and Spexgram's media hostnames. TLS certificates come from Let's Encrypt. Production only, on
+# the host that runs Spexify, Spexflix and/or Spexgram, when its own reverse proxy doesn't serve these hostnames (see
+# README). A hostname left unset is served only as <name>.localhost, so a host without one of the applications leaves
+# it out. Staging isn't reachable from the internet and uses compose.tailnet.yaml instead.
 x-logging: &logging
   driver: json-file
   options:
@@ -17,8 +18,9 @@ services:
       - "443:443/udp"
     environment:
       ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL must be set in .env}
-      SPEXIFY_API_HOST: ${SPEXIFY_API_HOST:?SPEXIFY_API_HOST must be set in .env}
-      SPEXFLIX_MEDIA_HOST: ${SPEXFLIX_MEDIA_HOST:?SPEXFLIX_MEDIA_HOST must be set in .env}
+      SPEXIFY_API_HOST: ${SPEXIFY_API_HOST:-spexify-api.localhost}
+      SPEXFLIX_MEDIA_HOST: ${SPEXFLIX_MEDIA_HOST:-spexflix-media.localhost}
+      SPEXGRAM_MEDIA_HOST: ${SPEXGRAM_MEDIA_HOST:-spexgram-media.localhost}
     restart: unless-stopped
     logging: *logging
     volumes:

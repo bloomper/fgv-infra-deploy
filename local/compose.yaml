@@ -61,6 +61,10 @@ services:
       SPEXIFY_URL: ${SPEXIFY_URL:-http://localhost:3002}
       SPEXFLIX_NAME: ${SPEXFLIX_NAME:-Spexflix}
       SPEXFLIX_URL: ${SPEXFLIX_URL:-http://localhost:3003}
+      SPEXGRAM_NAME: ${SPEXGRAM_NAME:-Spexgram}
+      SPEXGRAM_URL: ${SPEXGRAM_URL:-http://localhost:3004}
+      ARCHIVE_NAME: ${ARCHIVE_NAME:-Spexarkivet}
+      ARCHIVE_URL: ${ARCHIVE_URL:-http://localhost:3005}
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
       SMTP_FROM: ${MAIL_FROM}
