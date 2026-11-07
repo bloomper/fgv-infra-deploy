@@ -2,6 +2,8 @@
 	email {$ACME_EMAIL}
 	# No admin endpoint is needed: the configuration changes only with this file
 	admin off
+	# Hostnames left unset are *.localhost, which get Caddy's internal certificate; nothing should trust its root
+	skip_install_trust
 }
 
 (security_headers) {

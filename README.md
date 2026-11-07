@@ -182,6 +182,9 @@ changes:
   `fgv-revival-service`). The secrets in `fgv.json` are public
 - gives the service account of `fgv-admin` the `realm-management` roles the applications need, including
   `manage-events` so that loading sample data and migrating can turn off the event listener `fgv-admin-notification`
+- gives the clients that call Keycloak's admin API (`fgv-admin`, `fgv-spexify-service`, `fgv-spexgram-service`,
+  `fgv-archive-service`) the default client scope `kc-admin-api`. From Keycloak 26.8.2 the admin API only accepts
+  tokens with the audience that scope adds. A realm imported before that version gets it from here
 - maps each web client (`spexregister`, `fgv-revival`, `fgv-spexify`, `fgv-spexflix`, `fgv-spexgram`, `fgv-archive`)
   to the `USER` role of the others, so each web's application switcher lists the applications the user can open. A realm imported before
   that mapping existed gets it from here
@@ -423,7 +426,8 @@ machines take no user seats.
 | `tailnet-spexgram-media` | `spexgram-media-staging` | `spexgram-media:80`; nginx checks the signed addresses              |
 
 ```
-Browser ──https──▶ Cloudflare ──tunnel──▶ spexify-web, spexflix-web, spexgram-web (Cloudflare Access)
+Browser ──https──▶ Cloudflare ──tunnel──▶ spexify-web, spexflix-web, archive-web (Cloudflare Access; Spexarkivet's share links open)
+Browser ──https──▶ Cloudflare ──tunnel──▶ spexgram-web (no Access: Spexgram has a public side)
 Browser, Subsonic apps ──https──▶ Tailscale Funnel ──▶ tailnet-spexify-api ──▶ spexify-api:8080
 Browser ──https──▶ Tailscale Funnel ──▶ tailnet-spexflix-media ──▶ spexflix-media:80
 Browser ──https──▶ Tailscale Funnel ──▶ tailnet-spexgram-media ──▶ spexgram-media:80
@@ -464,16 +468,18 @@ certificates from Let's Encrypt (`ACME_EMAIL`), for:
 | Hostname              | Routes                                                                                   |
 |-----------------------|------------------------------------------------------------------------------------------|
 | `SPEXIFY_API_HOST`    | `spexify-api:8080`: Subsonic apps (`/rest/*`), signed links to audio and downloads (`/media/*`), `/docs` |
-| `SPEXFLIX_MEDIA_HOST` | `spexflix-media:80`, GET and HEAD only; nginx checks the signed addresses                 |
-| `SPEXGRAM_MEDIA_HOST` | `spexgram-media:80`, GET and HEAD only; nginx checks the signed addresses                 |
+| `SPEXFLIX_MEDIA_HOST` | `spexflix-media:80`, GET, HEAD and OPTIONS only; nginx checks the signed addresses        |
+| `SPEXGRAM_MEDIA_HOST` | `spexgram-media:80`, GET, HEAD and OPTIONS only; nginx checks the signed addresses        |
 
 On a host that runs them:
 
 1. Point the hostnames at the host.
 2. Open only ports 80 and 443 in the firewall. MySQL, Navidrome and every other container publish no ports.
-3. Add `compose.edge.yaml` to `COMPOSE_FILE`, set `SPEXIFY_API_HOST`, `SPEXFLIX_MEDIA_HOST`, `SPEXGRAM_MEDIA_HOST`
-   and `ACME_EMAIL`, and `docker compose up -d edge-caddy`. It starts before the applications and answers 502 for
-   them until they run.
+3. Add `compose.edge.yaml` to `COMPOSE_FILE`, set `ACME_EMAIL` and the hostnames of the applications the host runs,
+   and `docker compose up -d edge-caddy`. It starts before the applications and answers 502 for them until they run.
+   A hostname left unset is served only as `<name>.localhost` with Caddy's internal certificate, which nothing outside
+   reaches and which needs no Let's Encrypt certificate, so a host without e.g. Spexgram leaves `SPEXGRAM_MEDIA_HOST`
+   out.
 
 Production's own reverse proxy can serve these routes instead, or it leaves ports 80 and 443 to `edge-caddy` and gets
 its other hostnames added to `edge/Caddyfile`.

@@ -36,6 +36,21 @@ for role in query-users manage-users view-users view-clients manage-events; do
 done
 echo "updated fgv-admin realm-management roles"
 
+admin_api_scope_uuid=$(kcadm get client-scopes -r "$KEYCLOAK_REALM" --fields id,name --format csv --noquotes | tr -d '\r' | awk -F, '$2=="kc-admin-api"{print $1}')
+if [[ -z "$admin_api_scope_uuid" ]]; then
+  echo "skipped the kc-admin-api client scope: the realm has no such scope, so KEYCLOAK_IMAGE is older than 26.8.2"
+else
+  for client in fgv-admin fgv-spexify-service fgv-spexgram-service fgv-archive-service; do
+    uuid=$(client_uuid "$client")
+    if [[ -z "$uuid" ]]; then
+      echo "skipped $client kc-admin-api client scope: the realm has no such client"
+      continue
+    fi
+    kcadm update "clients/$uuid/default-client-scopes/$admin_api_scope_uuid" -r "$KEYCLOAK_REALM" -n
+    echo "updated $client with the kc-admin-api client scope"
+  done
+fi
+
 web_clients=(spexregister fgv-revival fgv-spexify fgv-spexflix fgv-spexgram fgv-archive)
 for client in "${web_clients[@]}"; do
   client_id=$(client_uuid "$client")
