@@ -162,7 +162,7 @@ printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 | `SPEXIFY_NAME`, `SPEXIFY_WEB_HOST` | Name and `WEB_HOST` of Spexify (`fgv-spexify`), which Keycloak sends users back to |
 | `SPEXFLIX_NAME`, `SPEXFLIX_WEB_HOST` | Name and `WEB_HOST` of Spexflix (`fgv-spexflix`)              |
 | `SPEXGRAM_NAME`, `SPEXGRAM_WEB_HOST` | Name and `WEB_HOST` of Spexgram (`fgv-spexgram`)              |
-| `ARCHIVE_NAME`, `ARCHIVE_WEB_HOST` | Name and `WEB_HOST` of Spexarkivet (`fgv-archive`)              |
+| `ARCHIVE_NAME`, `ARCHIVE_WEB_HOST` | Name and `WEB_HOST` of Spexarkiv (`fgv-archive`)              |
 | `TAILNET_TAG`, `TAILSCALE_IMAGE` | Staging only: the Funnel machines, see *Tailnet*           |
 | `SPEXIFY_API_HOST`, `SPEXFLIX_MEDIA_HOST`, `SPEXGRAM_MEDIA_HOST`, `ACME_EMAIL` | Production only: the edge proxy, see *Edge proxy* |
 
@@ -369,7 +369,7 @@ docker compose up -d && docker compose ps
   `docker compose down`, empty `local/.docker/keycloak-mysql/data` and start again.
 - `local/.env` sets the applications' local addresses, which the realm's redirect URIs and MCP audiences are made
   from: Spexregister's web on `http://localhost:3000`, Nyuppsättning's on `http://localhost:3001`, Spexify's on
-  `http://localhost:3002`, Spexflix's on `http://localhost:3003`, Spexgram's on `http://localhost:3004`, Spexarkivet's on
+  `http://localhost:3002`, Spexflix's on `http://localhost:3003`, Spexgram's on `http://localhost:3004`, Spexarkiv's on
   `http://localhost:3005`, and the MCP endpoints of Spexregister and
   Nyuppsättning.
 - Registration uses Cloudflare's Turnstile test keys, which always pass. To see a failed challenge, add
@@ -426,7 +426,7 @@ machines take no user seats.
 | `tailnet-spexgram-media` | `spexgram-media-staging` | `spexgram-media:80`; nginx checks the signed addresses              |
 
 ```
-Browser ──https──▶ Cloudflare ──tunnel──▶ spexify-web, spexflix-web, archive-web (Cloudflare Access; Spexarkivet's share links open)
+Browser ──https──▶ Cloudflare ──tunnel──▶ spexify-web, spexflix-web, archive-web (Cloudflare Access; Spexarkiv's share links open)
 Browser ──https──▶ Cloudflare ──tunnel──▶ spexgram-web (no Access: Spexgram has a public side)
 Browser, Subsonic apps ──https──▶ Tailscale Funnel ──▶ tailnet-spexify-api ──▶ spexify-api:8080
 Browser ──https──▶ Tailscale Funnel ──▶ tailnet-spexflix-media ──▶ spexflix-media:80

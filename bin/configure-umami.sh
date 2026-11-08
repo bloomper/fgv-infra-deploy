@@ -22,7 +22,7 @@ if [[ ${1:-} == local ]]; then
     "${SPEXIFY_NAME:-Spexify}" "$(host "${SPEXIFY_URL:-http://localhost:3002}")" "Spexify web's .env.local"
     "${SPEXFLIX_NAME:-Spexflix}" "$(host "${SPEXFLIX_URL:-http://localhost:3003}")" "Spexflix web's .env.local"
     "${SPEXGRAM_NAME:-Spexgram}" "$(host "${SPEXGRAM_URL:-http://localhost:3004}")" "Spexgram web's .env.local"
-    "${ARCHIVE_NAME:-Spexarkivet}" "$(host "${ARCHIVE_URL:-http://localhost:3005}")" "Spexarkivet web's .env.local"
+    "${ARCHIVE_NAME:-Spexarkiv}" "$(host "${ARCHIVE_URL:-http://localhost:3005}")" "Spexarkiv web's .env.local"
   )
 else
   password=$(cat secrets/UMAMI_ADMIN_PASSWORD)
@@ -32,7 +32,7 @@ else
     "${SPEXIFY_NAME:-Spexify}" "$SPEXIFY_WEB_HOST" "fgv-spexify-deploy's .env"
     "${SPEXFLIX_NAME:-Spexflix}" "$SPEXFLIX_WEB_HOST" "fgv-spexflix-deploy's .env"
     "${SPEXGRAM_NAME:-Spexgram}" "$SPEXGRAM_WEB_HOST" "fgv-spexgram-deploy's .env"
-    "${ARCHIVE_NAME:-Spexarkivet}" "$ARCHIVE_WEB_HOST" "fgv-archive-deploy's .env"
+    "${ARCHIVE_NAME:-Spexarkiv}" "$ARCHIVE_WEB_HOST" "fgv-archive-deploy's .env"
   )
 fi
 
