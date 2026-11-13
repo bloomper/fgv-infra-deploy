@@ -97,3 +97,22 @@ api.archive.fgv.local.nu:8443 {
     }
 }
 
+
+api.spexipedia.fgv.local.nu:8443 {
+    tls internal
+    reverse_proxy spexipedia-api:8080 host.docker.internal:8088 {
+        lb_policy first
+        lb_try_duration 2s
+        fail_duration 10s
+        header_up X-Forwarded-Port {http.request.port}
+    }
+}
+
+media.spexipedia.fgv.local.nu:8443 {
+    tls internal
+    reverse_proxy spexipedia-media:80 host.docker.internal:8089 {
+        lb_policy first
+        lb_try_duration 2s
+        fail_duration 10s
+    }
+}

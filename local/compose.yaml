@@ -65,6 +65,8 @@ services:
       SPEXGRAM_URL: ${SPEXGRAM_URL:-http://localhost:3004}
       ARCHIVE_NAME: ${ARCHIVE_NAME:-Spexarkiv}
       ARCHIVE_URL: ${ARCHIVE_URL:-http://localhost:3005}
+      SPEXIPEDIA_NAME: ${SPEXIPEDIA_NAME:-Spexipedia}
+      SPEXIPEDIA_URL: ${SPEXIPEDIA_URL:-http://localhost:3006}
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
       SMTP_FROM: ${MAIL_FROM}

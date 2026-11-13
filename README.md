@@ -163,6 +163,7 @@ printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 | `SPEXFLIX_NAME`, `SPEXFLIX_WEB_HOST` | Name and `WEB_HOST` of Spexflix (`fgv-spexflix`)              |
 | `SPEXGRAM_NAME`, `SPEXGRAM_WEB_HOST` | Name and `WEB_HOST` of Spexgram (`fgv-spexgram`)              |
 | `ARCHIVE_NAME`, `ARCHIVE_WEB_HOST` | Name and `WEB_HOST` of Spexarkiv (`fgv-archive`)              |
+| `SPEXIPEDIA_NAME`, `SPEXIPEDIA_WEB_HOST` | Name and `WEB_HOST` of Spexipedia (`fgv-spexipedia`)    |
 | `TAILNET_TAG`, `TAILSCALE_IMAGE` | Staging only: the Funnel machines, see *Tailnet*           |
 | `SPEXIFY_API_HOST`, `SPEXFLIX_MEDIA_HOST`, `SPEXGRAM_MEDIA_HOST`, `ACME_EMAIL` | Production only: the edge proxy, see *Edge proxy* |
 
@@ -185,7 +186,8 @@ changes:
 - gives the clients that call Keycloak's admin API (`fgv-admin`, `fgv-spexify-service`, `fgv-spexgram-service`,
   `fgv-archive-service`) the default client scope `kc-admin-api`. From Keycloak 26.8.2 the admin API only accepts
   tokens with the audience that scope adds. A realm imported before that version gets it from here
-- maps each web client (`spexregister`, `fgv-revival`, `fgv-spexify`, `fgv-spexflix`, `fgv-spexgram`, `fgv-archive`)
+- maps each web client (`spexregister`, `fgv-revival`, `fgv-spexify`, `fgv-spexflix`, `fgv-spexgram`, `fgv-archive`,
+  `fgv-spexipedia`)
   to the `USER` role of the others, so each web's application switcher lists the applications the user can open. A realm imported before
   that mapping existed gets it from here
 - selects `KEYCLOAK_THEME` as the realm's login, account and email theme
@@ -204,8 +206,8 @@ therefore runs inside the container, before the route is published:
 - changes `admin`'s password to `secrets/UMAMI_ADMIN_PASSWORD`, which `bin/init-secrets.sh` generates
 - adds a website per application, unless it exists, and prints their IDs: `SPEXREGISTER_NAME` for
   `SPEXREGISTER_WEB_HOST`, `FGV_REVIVAL_NAME` for `FGV_REVIVAL_WEB_HOST`, `SPEXIFY_NAME` for `SPEXIFY_WEB_HOST`,
-  `SPEXFLIX_NAME` for `SPEXFLIX_WEB_HOST`, `SPEXGRAM_NAME` for `SPEXGRAM_WEB_HOST` and `ARCHIVE_NAME` for
-  `ARCHIVE_WEB_HOST`
+  `SPEXFLIX_NAME` for `SPEXFLIX_WEB_HOST`, `SPEXGRAM_NAME` for `SPEXGRAM_WEB_HOST`, `ARCHIVE_NAME` for
+  `ARCHIVE_WEB_HOST` and `SPEXIPEDIA_NAME` for `SPEXIPEDIA_WEB_HOST`
 
 Put each ID in its deploy repository's `.env` as `UMAMI_WEBSITE_ID` and recreate its web container. Without the ID the
 application sends nothing. You can run the script again safely. Once `admin` has two-factor authentication (under
@@ -336,11 +338,11 @@ own database and API locally:
 | `keycloak-server` | `https://auth.fgv.local.nu:8443/auth`, `keycloak-server:8080` on `fgv-local` |
 | `mailpit`         | `https://mail.fgv.local.nu:8443` or `http://localhost:8025`, SMTP on `mailpit:1025` and `localhost:1025` |
 | `umami-server`    | `https://analytics.fgv.local.nu:8443`, `umami-server:3000` on `fgv-local`  |
-| `caddy`           | Port 8443 with a local certificate, also for the applications' APIs and Spexflix's and Spexgram's media servers |
+| `caddy`           | Port 8443 with a local certificate, also for the applications' APIs and Spexflix's, Spexgram's and Spexipedia's media servers |
 
 The project is `fgv-infra-local` and the shared network is `fgv-local`, which the `docker-compose.yaml` of
 `spexregister-server`, `fgv-revival-server`, `fgv-spexify-server`, `fgv-spexflix-server`, `fgv-spexgram-server` and
-`fgv-archive-server` join. Running only one
+`fgv-archive-server` and `fgv-spexipedia-server` join. Running only one
 application is fine: start this stack and that application. Nyuppsättning shows spex as unavailable until Spexregister
 runs as well; Spexify's and Spexflix's sample data need Spexregister's.
 
@@ -350,6 +352,7 @@ Add to `/etc/hosts` (or the Windows equivalent):
 127.0.0.1 auth.fgv.local.nu mail.fgv.local.nu analytics.fgv.local.nu api.register.fgv.local.nu register.fgv.local.nu api.revival.fgv.local.nu revival.fgv.local.nu
 127.0.0.1 api.spexify.fgv.local.nu spexify.fgv.local.nu api.spexflix.fgv.local.nu spexflix.fgv.local.nu media.spexflix.fgv.local.nu
 127.0.0.1 api.spexgram.fgv.local.nu spexgram.fgv.local.nu media.spexgram.fgv.local.nu api.archive.fgv.local.nu archive.fgv.local.nu
+127.0.0.1 api.spexipedia.fgv.local.nu spexipedia.fgv.local.nu media.spexipedia.fgv.local.nu
 ```
 
 The secrets are files in `local/.docker/secrets/`, in git with the placeholder `CHANGE_ME`. Replace each one without
@@ -370,13 +373,13 @@ docker compose up -d && docker compose ps
 - `local/.env` sets the applications' local addresses, which the realm's redirect URIs and MCP audiences are made
   from: Spexregister's web on `http://localhost:3000`, Nyuppsättning's on `http://localhost:3001`, Spexify's on
   `http://localhost:3002`, Spexflix's on `http://localhost:3003`, Spexgram's on `http://localhost:3004`, Spexarkiv's on
-  `http://localhost:3005`, and the MCP endpoints of Spexregister and
+  `http://localhost:3005`, Spexipedia's on `http://localhost:3006`, and the MCP endpoints of Spexregister and
   Nyuppsättning.
 - Registration uses Cloudflare's Turnstile test keys, which always pass. To see a failed challenge, add
   `TURNSTILE_SECRET_KEY=2x0000000000000000000000000000000AA` to `local/.env` and run
   `docker compose up -d keycloak-server`.
 - Umami keeps user `admin` and password `umami` locally. `local/bin/configure-umami.sh` adds a website for the hosts
-  of `SPEXREGISTER_URL`, `FGV_REVIVAL_URL`, `SPEXIFY_URL`, `SPEXFLIX_URL`, `SPEXGRAM_URL` and `ARCHIVE_URL` (all `localhost`, told apart by name) and
+  of `SPEXREGISTER_URL`, `FGV_REVIVAL_URL`, `SPEXIFY_URL`, `SPEXFLIX_URL`, `SPEXGRAM_URL`, `ARCHIVE_URL` and `SPEXIPEDIA_URL` (all `localhost`, told apart by name) and
   prints their IDs for
   `UMAMI_WEBSITE_ID` in each web's `.env.local`. Its
   database is in `local/.docker/umami-postgres/data`; empty that directory to start over. Browsers with *Do Not
@@ -394,7 +397,8 @@ docker compose up -d && docker compose ps
   `api.spexify.fgv.local.nu` to `spexify-api` or port 8082, `api.spexflix.fgv.local.nu` to `spexflix-api` or port
   8083, `media.spexflix.fgv.local.nu` to `spexflix-media` or port 8084, `api.spexgram.fgv.local.nu` to `spexgram-api`
   or port 8085, `media.spexgram.fgv.local.nu` to `spexgram-media` or port 8086, and `api.archive.fgv.local.nu` to
-  `archive-api` or port 8087.
+  `archive-api` or port 8087, `api.spexipedia.fgv.local.nu` to `spexipedia-api` or port 8088, and
+  `media.spexipedia.fgv.local.nu` to `spexipedia-media` or port 8089.
 
 ## Image tags
 
@@ -433,6 +437,7 @@ machines take no user seats.
 ```
 Browser ──https──▶ Cloudflare ──tunnel──▶ spexify-web, spexflix-web, archive-web (Cloudflare Access; Spexarkiv's share links open)
 Browser ──https──▶ Cloudflare ──tunnel──▶ spexgram-web (no Access: Spexgram has a public side)
+Browser ──https──▶ Cloudflare (CDN) ──tunnel──▶ spexipedia-web, and spexipedia-media for /media/* (no Access: Spexipedia is public)
 Browser, Subsonic apps ──https──▶ Tailscale Funnel ──▶ tailnet-spexify-api ──▶ spexify-api:8080
 Browser ──https──▶ Tailscale Funnel ──▶ tailnet-spexflix-media ──▶ spexflix-media:80
 Browser ──https──▶ Tailscale Funnel ──▶ tailnet-spexgram-media ──▶ spexgram-media:80

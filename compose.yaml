@@ -70,6 +70,8 @@ services:
       SPEXGRAM_URL: https://${SPEXGRAM_WEB_HOST:?SPEXGRAM_WEB_HOST must be set in .env}
       ARCHIVE_NAME: ${ARCHIVE_NAME:-Spexarkiv}
       ARCHIVE_URL: https://${ARCHIVE_WEB_HOST:?ARCHIVE_WEB_HOST must be set in .env}
+      SPEXIPEDIA_NAME: ${SPEXIPEDIA_NAME:-Spexipedia}
+      SPEXIPEDIA_URL: https://${SPEXIPEDIA_WEB_HOST:?SPEXIPEDIA_WEB_HOST must be set in .env}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_FROM: ${MAIL_FROM}
