@@ -320,7 +320,7 @@ A production host differs in these ways:
 - no sample users: the realm in the Keycloak image contains none
 - `bin/backup-db.sh` scheduled in cron, with `backups/` copied to off-host storage
 - `KEYCLOAK_IMAGE` pinned to a release, e.g. `bloomper/fgv-keycloak:1.1.0`, instead of `develop`, `UMAMI_IMAGE` to
-  an exact version such as `ghcr.io/umami-software/umami:3.4.0` (it migrates its database on start), so that an
+  an exact version such as `ghcr.io/umami-software/umami:3.5.0` (it migrates its database on start), so that an
   update happens only when `.env` changes
 - no Cloudflare: `COMPOSE_FILE` leaves out `compose.tunnel.yaml`, `secrets/cloudflared.env` stays empty, and there
   is no Cloudflare Access. Production sits behind its own reverse proxy, which terminates TLS and forwards

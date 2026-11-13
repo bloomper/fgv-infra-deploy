@@ -109,7 +109,7 @@ services:
       - umami_postgres_data:/var/lib/postgresql/data
 
   umami-server:
-    image: ${UMAMI_IMAGE:-ghcr.io/umami-software/umami:3.4}
+    image: ${UMAMI_IMAGE:-ghcr.io/umami-software/umami:3.5}
     environment:
       DATABASE_URL: postgresql://umami:umami@umami-postgres:5432/umami
       APP_SECRET: local-umami-app-secret
@@ -130,7 +130,7 @@ services:
       - fgv
 
   mailpit:
-    image: axllent/mailpit:v1.31.4
+    image: axllent/mailpit:v1.33.1
     restart: unless-stopped
     ports:
       - "1025:1025"
@@ -140,7 +140,7 @@ services:
       - fgv
 
   caddy:
-    image: caddy:2.10
+    image: caddy:2.11
     restart: unless-stopped
     ports:
       - "8443:8443"
