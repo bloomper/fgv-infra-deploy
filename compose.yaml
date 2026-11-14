@@ -6,6 +6,10 @@ x-logging: &logging
     max-size: 10m
     max-file: "5"
 
+# Keeps the processes from gaining privileges through setuid binaries
+x-security-opt: &security-opt
+  - no-new-privileges:true
+
 services:
   keycloak-mysql:
     image: ${MYSQL_IMAGE:-mysql:8.4}
@@ -16,6 +20,7 @@ services:
       MYSQL_PASSWORD_FILE: /run/secrets/KEYCLOAK_MYSQL_USER_PASSWORD
     restart: unless-stopped
     logging: *logging
+    security_opt: *security-opt
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent" ]
       interval: 10s
@@ -81,6 +86,7 @@ services:
       SMTP_SSL: ${SMTP_SSL:-false}
     restart: unless-stopped
     logging: *logging
+    security_opt: *security-opt
     healthcheck:
       test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000;printf \"GET /auth/health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n\" >&3;grep \"HTTP/1.1 200 OK\" <&3" ]
       interval: 10s
@@ -107,6 +113,7 @@ services:
       POSTGRES_PASSWORD_FILE: /run/secrets/UMAMI_POSTGRES_PASSWORD
     restart: unless-stopped
     logging: *logging
+    security_opt: *security-opt
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\"" ]
       interval: 10s
@@ -131,6 +138,7 @@ services:
     init: true
     restart: unless-stopped
     logging: *logging
+    security_opt: *security-opt
     healthcheck:
       test: [ "CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:3000/api/heartbeat" ]
       interval: 10s

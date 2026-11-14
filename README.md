@@ -493,3 +493,9 @@ On a host that runs them:
 
 Production's own reverse proxy can serve these routes instead, or it leaves ports 80 and 443 to `edge-caddy` and gets
 its other hostnames added to `edge/Caddyfile`.
+
+The webs are not on this list: production's own reverse proxy serves them, as each deploy repository describes. One of
+them takes two routes on one hostname: Spexipedia's `WEB_HOST` sends `/media/*` to `spexipedia-media:80` (GET, HEAD and
+OPTIONS only; public images, cached long) and the rest to `spexipedia-web:3000` (see `fgv-spexipedia-deploy`,
+*Production*). Its API is reached only by its web and the other applications on the shared network, so it has no
+hostname of its own.
