@@ -69,14 +69,19 @@ services:
       REVIVAL_MCP_URL: https://${REVIVAL_API_HOST:?REVIVAL_API_HOST must be set in .env}/api/mcp
       SPEXIFY_NAME: ${SPEXIFY_NAME:-Spexify}
       SPEXIFY_URL: https://${SPEXIFY_WEB_HOST:?SPEXIFY_WEB_HOST must be set in .env}
+      SPEXIFY_MCP_URL: https://${SPEXIFY_API_HOST:?SPEXIFY_API_HOST must be set in .env}/api/mcp
       SPEXFLIX_NAME: ${SPEXFLIX_NAME:-Spexflix}
       SPEXFLIX_URL: https://${SPEXFLIX_WEB_HOST:?SPEXFLIX_WEB_HOST must be set in .env}
+      SPEXFLIX_MCP_URL: https://${SPEXFLIX_API_HOST:?SPEXFLIX_API_HOST must be set in .env}/api/mcp
       SPEXGRAM_NAME: ${SPEXGRAM_NAME:-Spexgram}
       SPEXGRAM_URL: https://${SPEXGRAM_WEB_HOST:?SPEXGRAM_WEB_HOST must be set in .env}
+      SPEXGRAM_MCP_URL: https://${SPEXGRAM_API_HOST:?SPEXGRAM_API_HOST must be set in .env}/api/mcp
       ARCHIVE_NAME: ${ARCHIVE_NAME:-Spexarkiv}
       ARCHIVE_URL: https://${ARCHIVE_WEB_HOST:?ARCHIVE_WEB_HOST must be set in .env}
+      ARCHIVE_MCP_URL: https://${ARCHIVE_API_HOST:?ARCHIVE_API_HOST must be set in .env}/api/mcp
       SPEXIPEDIA_NAME: ${SPEXIPEDIA_NAME:-Spexipedia}
       SPEXIPEDIA_URL: https://${SPEXIPEDIA_WEB_HOST:?SPEXIPEDIA_WEB_HOST must be set in .env}
+      SPEXIPEDIA_MCP_URL: https://${SPEXIPEDIA_API_HOST:?SPEXIPEDIA_API_HOST must be set in .env}/api/mcp
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_FROM: ${MAIL_FROM}

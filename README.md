@@ -161,12 +161,17 @@ printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 | `REVIVAL_WEB_HOST`  | Nyuppsättning's `WEB_HOST`                                      |
 | `REVIVAL_API_HOST`  | Nyuppsättning's `API_HOST`: audience in tokens for `fgv-revival-mcp` |
 | `SPEXIFY_NAME`, `SPEXIFY_WEB_HOST` | Name and `WEB_HOST` of Spexify (`fgv-spexify`), which Keycloak sends users back to |
+| `SPEXIFY_API_HOST` | Spexify's `API_HOST`: audience in tokens for `fgv-spexify-mcp`; in production also the edge proxy's |
 | `SPEXFLIX_NAME`, `SPEXFLIX_WEB_HOST` | Name and `WEB_HOST` of Spexflix (`fgv-spexflix`)              |
+| `SPEXFLIX_API_HOST` | Spexflix's `API_HOST`: audience in tokens for `fgv-spexflix-mcp` |
 | `SPEXGRAM_NAME`, `SPEXGRAM_WEB_HOST` | Name and `WEB_HOST` of Spexgram (`fgv-spexgram`)              |
+| `SPEXGRAM_API_HOST` | Spexgram's `API_HOST`: audience in tokens for `fgv-spexgram-mcp` |
 | `ARCHIVE_NAME`, `ARCHIVE_WEB_HOST` | Name and `WEB_HOST` of Spexarkiv (`fgv-archive`)              |
+| `ARCHIVE_API_HOST` | Spexarkiv's `API_HOST`: audience in tokens for `fgv-archive-mcp` |
 | `SPEXIPEDIA_NAME`, `SPEXIPEDIA_WEB_HOST` | Name and `WEB_HOST` of Spexipedia (`fgv-spexipedia`)    |
+| `SPEXIPEDIA_API_HOST` | Spexipedia's `API_HOST`: audience in tokens for `fgv-spexipedia-mcp` |
 | `TAILNET_TAG`, `TAILSCALE_IMAGE` | Staging only: the Funnel machines, see *Tailnet*           |
-| `SPEXIFY_API_HOST`, `SPEXFLIX_MEDIA_HOST`, `SPEXGRAM_MEDIA_HOST`, `ACME_EMAIL` | Production only: the edge proxy, see *Edge proxy* |
+| `SPEXFLIX_MEDIA_HOST`, `SPEXGRAM_MEDIA_HOST`, `ACME_EMAIL` | Production only: the edge proxy, see *Edge proxy* |
 
 ## 4. First start
 
@@ -394,8 +399,8 @@ cd .. && bin/seed-users.sh --local      # the sample users, password s3cr3t-s3cr
 - `local/.env` sets the applications' local addresses, which the realm's redirect URIs and MCP audiences are made
   from: Spexregister's web on `http://localhost:3000`, Nyuppsättning's on `http://localhost:3001`, Spexify's on
   `http://localhost:3002`, Spexflix's on `http://localhost:3003`, Spexgram's on `http://localhost:3004`, Spexarkiv's on
-  `http://localhost:3005`, Spexipedia's on `http://localhost:3006`, and the MCP endpoints of Spexregister and
-  Nyuppsättning.
+  `http://localhost:3005`, Spexipedia's on `http://localhost:3006`, and the MCP endpoints of Spexregister,
+  Nyuppsättning, Spexipedia, Spexify, Spexflix, Spexgram and Spexarkiv.
 - Registration uses Cloudflare's Turnstile test keys, which always pass. To see a failed challenge, add
   `TURNSTILE_SECRET_KEY=2x0000000000000000000000000000000AA` to `local/.env` and run
   `docker compose up -d keycloak-server`.
@@ -516,5 +521,9 @@ its other hostnames added to `edge/Caddyfile`.
 The webs are not on this list: production's own reverse proxy serves them, as each deploy repository describes. One of
 them takes two routes on one hostname: Spexipedia's `WEB_HOST` sends `/media/*` to `spexipedia-media:80` (GET, HEAD and
 OPTIONS only; public images, cached long) and the rest to `spexipedia-web:3000` (see `fgv-spexipedia-deploy`,
-*Production*). Its API is reached only by its web and the other applications on the shared network, so it has no
-hostname of its own.
+*Production*). Its API is reached by its web and the other applications on the shared network; its own hostname,
+`SPEXIPEDIA_API_HOST`, serves only its MCP endpoint (see `fgv-spexipedia-deploy`).
+
+Every application with an MCP server (Spexregister, Nyuppsättning, Spexipedia, Spexify, Spexflix, Spexgram and
+Spexarkiv) needs its `*_API_HOST` to reach `/api/mcp` and `/.well-known/oauth-protected-resource/*` on its API, since
+MCP clients run on the user's machine; Keycloak puts `https://<API_HOST>/api/mcp` in their tokens as audience.
