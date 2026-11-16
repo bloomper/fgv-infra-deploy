@@ -154,9 +154,9 @@ printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 
 | Variable                | Purpose                                                       |
 |-------------------------|---------------------------------------------------------------|
-| `SPEXREGISTER_NAME`     | Name of the `spexregister` client, shown on login and in the approval email |
+| `SPEXREGISTER_NAME`     | Name of the `fgv-spexregister` client, shown on login and in the approval email |
 | `SPEXREGISTER_WEB_HOST` | Spexregister's `WEB_HOST`: the only redirect target after login and logout |
-| `SPEXREGISTER_API_HOST` | Spexregister's `API_HOST`: audience in tokens for `spexregister-mcp` |
+| `SPEXREGISTER_API_HOST` | Spexregister's `API_HOST`: audience in tokens for `fgv-spexregister-mcp` |
 | `REVIVAL_NAME`      | Name of the `fgv-revival` client                              |
 | `REVIVAL_WEB_HOST`  | Nyuppsättning's `WEB_HOST`                                      |
 | `REVIVAL_API_HOST`  | Nyuppsättning's `API_HOST`: audience in tokens for `fgv-revival-mcp` |
@@ -186,14 +186,14 @@ bin/seed-users.sh                         # staging only: the sample users (see 
 Keycloak imports `fgv.json` only when the realm doesn't exist yet. Then `configure-keycloak.sh` makes these
 changes:
 
-- sets the secret of each client in `secrets/clients/` (`fgv-admin`, `spexregister`, `fgv-revival`,
+- sets the secret of each client in `secrets/clients/` (`fgv-admin`, `fgv-spexregister`, `fgv-revival`,
   `fgv-revival-service`). The secrets in `fgv.json` are public
 - gives the service account of `fgv-admin` the `realm-management` roles the applications need, including
   `manage-events` so that migrating can turn off the event listener `fgv-admin-notification`
 - gives the clients that call Keycloak's admin API (`fgv-admin`, `fgv-spexify-service`, `fgv-spexgram-service`,
   `fgv-archive-service`) the default client scope `kc-admin-api`. From Keycloak 26.8.2 the admin API only accepts
   tokens with the audience that scope adds. A realm imported before that version gets it from here
-- maps each web client (`spexregister`, `fgv-revival`, `fgv-spexify`, `fgv-spexflix`, `fgv-spexgram`, `fgv-archive`,
+- maps each web client (`fgv-spexregister`, `fgv-revival`, `fgv-spexify`, `fgv-spexflix`, `fgv-spexgram`, `fgv-archive`,
   `fgv-spexipedia`)
   to the `USER` role of the others, so each web's application switcher lists the applications the user can open. A realm imported before
   that mapping existed gets it from here

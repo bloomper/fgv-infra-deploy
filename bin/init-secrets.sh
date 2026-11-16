@@ -31,9 +31,9 @@ if ! grep -qx 'DEPLOY_ENV=production' .env 2>/dev/null; then
 fi
 
 # Client secrets, set in the realm by bin/configure-keycloak.sh and copied by the applications' bin/init-secrets.sh
-for client in fgv-admin spexregister fgv-revival fgv-revival-service fgv-spexify fgv-spexify-service fgv-spexflix fgv-spexflix-service \
+for client in fgv-admin fgv-spexregister fgv-revival fgv-revival-service fgv-spexify fgv-spexify-service fgv-spexflix fgv-spexflix-service \
     fgv-spexgram fgv-spexgram-service fgv-archive fgv-archive-service fgv-spexipedia fgv-spexipedia-service \
-    spexregister-service; do
+    fgv-spexregister-service; do
   generate "clients/$client" "$(random 32)"
 done
 

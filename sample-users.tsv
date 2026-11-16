@@ -3,9 +3,9 @@
 # means changing it in the application that uses it (see README, Sample users).
 #
 # id	email	first name	last name	enabled	client roles (client:ROLE,ROLE ...; - for none)
-00000000-0000-4000-8000-000000000001	admin@fgv.nu	Admin	Exempel	true	spexregister:USER,EDITOR,ADMIN fgv-revival:USER,SUPER_ADMIN fgv-spexify:USER,EDITOR,ADMIN fgv-spexflix:USER,EDITOR,ADMIN fgv-spexgram:USER,EDITOR,ADMIN fgv-archive:USER,EDITOR,ADMIN fgv-spexipedia:USER,AUTHOR,EDITOR,ADMIN
-00000000-0000-4000-8000-000000000002	editor@fgv.nu	Editor	Exempel	true	spexregister:USER,EDITOR fgv-spexify:USER,EDITOR fgv-spexflix:USER,EDITOR fgv-spexgram:USER,EDITOR fgv-archive:USER,EDITOR fgv-spexipedia:USER,AUTHOR,EDITOR
-00000000-0000-4000-8000-000000000003	user@fgv.nu	User	Exempel	true	spexregister:USER fgv-revival:USER fgv-spexify:USER fgv-spexflix:USER fgv-spexgram:USER fgv-archive:USER fgv-spexipedia:USER
+00000000-0000-4000-8000-000000000001	admin@fgv.nu	Admin	Exempel	true	fgv-spexregister:USER,EDITOR,ADMIN fgv-revival:USER,SUPER_ADMIN fgv-spexify:USER,EDITOR,ADMIN fgv-spexflix:USER,EDITOR,ADMIN fgv-spexgram:USER,EDITOR,ADMIN fgv-archive:USER,EDITOR,ADMIN fgv-spexipedia:USER,AUTHOR,EDITOR,ADMIN
+00000000-0000-4000-8000-000000000002	editor@fgv.nu	Editor	Exempel	true	fgv-spexregister:USER,EDITOR fgv-spexify:USER,EDITOR fgv-spexflix:USER,EDITOR fgv-spexgram:USER,EDITOR fgv-archive:USER,EDITOR fgv-spexipedia:USER,AUTHOR,EDITOR
+00000000-0000-4000-8000-000000000003	user@fgv.nu	User	Exempel	true	fgv-spexregister:USER fgv-revival:USER fgv-spexify:USER fgv-spexflix:USER fgv-spexgram:USER fgv-archive:USER fgv-spexipedia:USER
 00000000-0000-4000-8000-000000000004	author@fgv.nu	Agnes	Author	true	fgv-spexipedia:USER,AUTHOR
 00000000-0000-4000-8000-000000000005	no-access@fgv.nu	No	Access	true	-
 00000000-0000-4000-8000-000000000011	observer@fgv.nu	Observer	Exempel	true	fgv-revival:USER,OBSERVER
@@ -19,53 +19,53 @@
 00000000-0000-4000-8000-000000000019	participant@fgv.nu	Participant	Exempel	true	fgv-revival:USER
 00000000-0000-4000-8000-000000000020	helper@fgv.nu	Helper	Exempel	true	fgv-revival:USER
 # Spexregister's members, linked to sample spexare by its import: 01-05 editors, 06 admin, 46-50 inactive (disabled)
-00000000-0000-4000-8000-000000001001	member01@fgv.nu	Anders	Nilsson	true	spexregister:USER,EDITOR
-00000000-0000-4000-8000-000000001002	member02@fgv.nu	Ida	Olsson	true	spexregister:USER,EDITOR
-00000000-0000-4000-8000-000000001003	member03@fgv.nu	Axel	Gustafsson	true	spexregister:USER,EDITOR
-00000000-0000-4000-8000-000000001004	member04@fgv.nu	Lars	Jansson	true	spexregister:USER,EDITOR
-00000000-0000-4000-8000-000000001005	member05@fgv.nu	Lena	Lindberg	true	spexregister:USER,EDITOR
-00000000-0000-4000-8000-000000001006	member06@fgv.nu	Gustav	Lundgren	true	spexregister:USER,EDITOR,ADMIN
-00000000-0000-4000-8000-000000001007	member07@fgv.nu	Klara	Johansson	true	spexregister:USER
-00000000-0000-4000-8000-000000001008	member08@fgv.nu	Eva	Eriksson	true	spexregister:USER
-00000000-0000-4000-8000-000000001009	member09@fgv.nu	Fredrik	Persson	true	spexregister:USER
-00000000-0000-4000-8000-000000001010	member10@fgv.nu	Maja	Pettersson	true	spexregister:USER
-00000000-0000-4000-8000-000000001011	member11@fgv.nu	Maria	Hansson	true	spexregister:USER
-00000000-0000-4000-8000-000000001012	member12@fgv.nu	Per	Lindqvist	true	spexregister:USER
-00000000-0000-4000-8000-000000001013	member13@fgv.nu	Linnea	Holm	true	spexregister:USER
-00000000-0000-4000-8000-000000001014	member14@fgv.nu	Nils	Karlsson	true	spexregister:USER
-00000000-0000-4000-8000-000000001015	member15@fgv.nu	Johan	Larsson	true	spexregister:USER
-00000000-0000-4000-8000-000000001016	member16@fgv.nu	Emma	Svensson	true	spexregister:USER
-00000000-0000-4000-8000-000000001017	member17@fgv.nu	Viktor	Jonsson	true	spexregister:USER
-00000000-0000-4000-8000-000000001018	member18@fgv.nu	Erik	Bengtsson	true	spexregister:USER
-00000000-0000-4000-8000-000000001019	member19@fgv.nu	Sara	Berg	true	spexregister:USER
-00000000-0000-4000-8000-000000001020	member20@fgv.nu	Oskar	Andersson	true	spexregister:USER
-00000000-0000-4000-8000-000000001021	member21@fgv.nu	Hanna	Nilsson	true	spexregister:USER
-00000000-0000-4000-8000-000000001022	member22@fgv.nu	Karin	Olsson	true	spexregister:USER
-00000000-0000-4000-8000-000000001023	member23@fgv.nu	Mikael	Gustafsson	true	spexregister:USER
-00000000-0000-4000-8000-000000001024	member24@fgv.nu	Elin	Jansson	true	spexregister:USER
-00000000-0000-4000-8000-000000001025	member25@fgv.nu	Anna	Lindberg	true	spexregister:USER
-00000000-0000-4000-8000-000000001026	member26@fgv.nu	Anders	Lundgren	true	spexregister:USER
-00000000-0000-4000-8000-000000001027	member27@fgv.nu	Ida	Johansson	true	spexregister:USER
-00000000-0000-4000-8000-000000001028	member28@fgv.nu	Axel	Eriksson	true	spexregister:USER
-00000000-0000-4000-8000-000000001029	member29@fgv.nu	Lars	Persson	true	spexregister:USER
-00000000-0000-4000-8000-000000001030	member30@fgv.nu	Lena	Pettersson	true	spexregister:USER
-00000000-0000-4000-8000-000000001031	member31@fgv.nu	Gustav	Hansson	true	spexregister:USER
-00000000-0000-4000-8000-000000001032	member32@fgv.nu	Klara	Lindqvist	true	spexregister:USER
-00000000-0000-4000-8000-000000001033	member33@fgv.nu	Eva	Holm	true	spexregister:USER
-00000000-0000-4000-8000-000000001034	member34@fgv.nu	Fredrik	Karlsson	true	spexregister:USER
-00000000-0000-4000-8000-000000001035	member35@fgv.nu	Maja	Larsson	true	spexregister:USER
-00000000-0000-4000-8000-000000001036	member36@fgv.nu	Maria	Svensson	true	spexregister:USER
-00000000-0000-4000-8000-000000001037	member37@fgv.nu	Per	Jonsson	true	spexregister:USER
-00000000-0000-4000-8000-000000001038	member38@fgv.nu	Linnea	Bengtsson	true	spexregister:USER
-00000000-0000-4000-8000-000000001039	member39@fgv.nu	Nils	Berg	true	spexregister:USER
-00000000-0000-4000-8000-000000001040	member40@fgv.nu	Johan	Andersson	true	spexregister:USER
-00000000-0000-4000-8000-000000001041	member41@fgv.nu	Emma	Nilsson	true	spexregister:USER
-00000000-0000-4000-8000-000000001042	member42@fgv.nu	Viktor	Olsson	true	spexregister:USER
-00000000-0000-4000-8000-000000001043	member43@fgv.nu	Erik	Gustafsson	true	spexregister:USER
-00000000-0000-4000-8000-000000001044	member44@fgv.nu	Sara	Jansson	true	spexregister:USER
-00000000-0000-4000-8000-000000001045	member45@fgv.nu	Oskar	Lindberg	true	spexregister:USER
-00000000-0000-4000-8000-000000001046	member46@fgv.nu	Hanna	Lundgren	false	spexregister:USER
-00000000-0000-4000-8000-000000001047	member47@fgv.nu	Karin	Johansson	false	spexregister:USER
-00000000-0000-4000-8000-000000001048	member48@fgv.nu	Mikael	Eriksson	false	spexregister:USER
-00000000-0000-4000-8000-000000001049	member49@fgv.nu	Elin	Persson	false	spexregister:USER
-00000000-0000-4000-8000-000000001050	member50@fgv.nu	Anna	Pettersson	false	spexregister:USER
+00000000-0000-4000-8000-000000001001	member01@fgv.nu	Anders	Nilsson	true	fgv-spexregister:USER,EDITOR
+00000000-0000-4000-8000-000000001002	member02@fgv.nu	Ida	Olsson	true	fgv-spexregister:USER,EDITOR
+00000000-0000-4000-8000-000000001003	member03@fgv.nu	Axel	Gustafsson	true	fgv-spexregister:USER,EDITOR
+00000000-0000-4000-8000-000000001004	member04@fgv.nu	Lars	Jansson	true	fgv-spexregister:USER,EDITOR
+00000000-0000-4000-8000-000000001005	member05@fgv.nu	Lena	Lindberg	true	fgv-spexregister:USER,EDITOR
+00000000-0000-4000-8000-000000001006	member06@fgv.nu	Gustav	Lundgren	true	fgv-spexregister:USER,EDITOR,ADMIN
+00000000-0000-4000-8000-000000001007	member07@fgv.nu	Klara	Johansson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001008	member08@fgv.nu	Eva	Eriksson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001009	member09@fgv.nu	Fredrik	Persson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001010	member10@fgv.nu	Maja	Pettersson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001011	member11@fgv.nu	Maria	Hansson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001012	member12@fgv.nu	Per	Lindqvist	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001013	member13@fgv.nu	Linnea	Holm	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001014	member14@fgv.nu	Nils	Karlsson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001015	member15@fgv.nu	Johan	Larsson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001016	member16@fgv.nu	Emma	Svensson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001017	member17@fgv.nu	Viktor	Jonsson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001018	member18@fgv.nu	Erik	Bengtsson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001019	member19@fgv.nu	Sara	Berg	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001020	member20@fgv.nu	Oskar	Andersson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001021	member21@fgv.nu	Hanna	Nilsson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001022	member22@fgv.nu	Karin	Olsson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001023	member23@fgv.nu	Mikael	Gustafsson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001024	member24@fgv.nu	Elin	Jansson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001025	member25@fgv.nu	Anna	Lindberg	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001026	member26@fgv.nu	Anders	Lundgren	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001027	member27@fgv.nu	Ida	Johansson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001028	member28@fgv.nu	Axel	Eriksson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001029	member29@fgv.nu	Lars	Persson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001030	member30@fgv.nu	Lena	Pettersson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001031	member31@fgv.nu	Gustav	Hansson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001032	member32@fgv.nu	Klara	Lindqvist	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001033	member33@fgv.nu	Eva	Holm	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001034	member34@fgv.nu	Fredrik	Karlsson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001035	member35@fgv.nu	Maja	Larsson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001036	member36@fgv.nu	Maria	Svensson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001037	member37@fgv.nu	Per	Jonsson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001038	member38@fgv.nu	Linnea	Bengtsson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001039	member39@fgv.nu	Nils	Berg	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001040	member40@fgv.nu	Johan	Andersson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001041	member41@fgv.nu	Emma	Nilsson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001042	member42@fgv.nu	Viktor	Olsson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001043	member43@fgv.nu	Erik	Gustafsson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001044	member44@fgv.nu	Sara	Jansson	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001045	member45@fgv.nu	Oskar	Lindberg	true	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001046	member46@fgv.nu	Hanna	Lundgren	false	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001047	member47@fgv.nu	Karin	Johansson	false	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001048	member48@fgv.nu	Mikael	Eriksson	false	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001049	member49@fgv.nu	Elin	Persson	false	fgv-spexregister:USER
+00000000-0000-4000-8000-000000001050	member50@fgv.nu	Anna	Pettersson	false	fgv-spexregister:USER

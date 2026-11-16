@@ -51,7 +51,7 @@ else
   done
 fi
 
-web_clients=(spexregister fgv-revival fgv-spexify fgv-spexflix fgv-spexgram fgv-archive fgv-spexipedia)
+web_clients=(fgv-spexregister fgv-revival fgv-spexify fgv-spexflix fgv-spexgram fgv-archive fgv-spexipedia)
 for client in "${web_clients[@]}"; do
   client_id=$(client_uuid "$client")
   for other in "${web_clients[@]}"; do
