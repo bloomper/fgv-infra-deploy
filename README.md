@@ -408,11 +408,9 @@ cd .. && bin/seed-users.sh --local      # the sample users, password s3cr3t-s3cr
 - Caddy's root certificate is `local/.docker/caddy/data/caddy/pki/authorities/local/root.crt`. Import it into the
   operating system's trust store, and give it to tools that don't use that store, such as Node's
   `NODE_EXTRA_CA_CERTS`.
-- The deploy repos' `bin/init-secrets.sh` look for this repo in `../fgv-infra-deploy` and for Spexregister's deploy
-  repo in `../spexregister-deploy`. When the repos are grouped per application instead (`fgv/fgv-infra-deploy`,
-  `fgv/spexregister/spexregister-deploy`, `fgv/spexify/fgv-spexify-deploy`, ...), run
-  `. path/to/fgv-infra-deploy/local/bin/env.sh` first (bash or zsh). It sets `INFRA_DEPLOY` and `SPEXREGISTER_DEPLOY`
-  for that layout and keeps values already set.
+- The deploy repos' `bin/init-secrets.sh` look for this repo next to their checkout (`../fgv-infra-deploy`, as on the
+  hosts) or, when the repos are grouped per application (`fgv/fgv-infra-deploy`, `fgv/spexify/fgv-spexify-deploy`,
+  ...), one level further up. `INFRA_DEPLOY` overrides both.
 - Caddy forwards `api.register.fgv.local.nu` to the `spexregister-api` container, or, when that isn't running, to
   port 8080 on the host. Likewise `api.revival.fgv.local.nu` goes to `revival-api` or port 8081,
   `api.spexify.fgv.local.nu` to `spexify-api` or port 8082, `api.spexflix.fgv.local.nu` to `spexflix-api` or port
