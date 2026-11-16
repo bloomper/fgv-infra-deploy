@@ -57,6 +57,7 @@ and the project's own network with them, e.g. `fgv-infra-staging_keycloak_mysql_
 | `bin/init-secrets.sh`         | Generates random secrets into `secrets/` (never overwrites existing ones)  |
 | `bin/configure-keycloak.sh`   | Sets client secrets, theme and mail settings in the realm                  |
 | `bin/configure-umami.sh`      | Sets Umami's admin password and adds the applications' websites            |
+| `bin/seed-users.sh`, `sample-users.tsv` | Creates or resets the sample users of every application (staging and local only, see *Sample users*) |
 | `bin/backup-db.sh`            | Dumps the databases into `backups/`, pruning dumps older than 14 days      |
 | `local/`                      | The local development stack, see *Local development*                       |
 
@@ -153,18 +154,24 @@ printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 
 | Variable                | Purpose                                                       |
 |-------------------------|---------------------------------------------------------------|
-| `SPEXREGISTER_NAME`     | Name of the `spexregister` client, shown on login and in the approval email |
+| `SPEXREGISTER_NAME`     | Name of the `fgv-spexregister` client, shown on login and in the approval email |
 | `SPEXREGISTER_WEB_HOST` | Spexregister's `WEB_HOST`: the only redirect target after login and logout |
-| `SPEXREGISTER_API_HOST` | Spexregister's `API_HOST`: audience in tokens for `spexregister-mcp` |
-| `FGV_REVIVAL_NAME`      | Name of the `fgv-revival` client                              |
-| `FGV_REVIVAL_WEB_HOST`  | Nyuppsättning's `WEB_HOST`                                      |
-| `FGV_REVIVAL_API_HOST`  | Nyuppsättning's `API_HOST`: audience in tokens for `fgv-revival-mcp` |
+| `SPEXREGISTER_API_HOST` | Spexregister's `API_HOST`: audience in tokens for `fgv-spexregister-mcp` |
+| `REVIVAL_NAME`      | Name of the `fgv-revival` client                              |
+| `REVIVAL_WEB_HOST`  | Nyuppsättning's `WEB_HOST`                                      |
+| `REVIVAL_API_HOST`  | Nyuppsättning's `API_HOST`: audience in tokens for `fgv-revival-mcp` |
 | `SPEXIFY_NAME`, `SPEXIFY_WEB_HOST` | Name and `WEB_HOST` of Spexify (`fgv-spexify`), which Keycloak sends users back to |
+| `SPEXIFY_API_HOST` | Spexify's `API_HOST`: audience in tokens for `fgv-spexify-mcp`; in production also the edge proxy's |
 | `SPEXFLIX_NAME`, `SPEXFLIX_WEB_HOST` | Name and `WEB_HOST` of Spexflix (`fgv-spexflix`)              |
+| `SPEXFLIX_API_HOST` | Spexflix's `API_HOST`: audience in tokens for `fgv-spexflix-mcp` |
 | `SPEXGRAM_NAME`, `SPEXGRAM_WEB_HOST` | Name and `WEB_HOST` of Spexgram (`fgv-spexgram`)              |
+| `SPEXGRAM_API_HOST` | Spexgram's `API_HOST`: audience in tokens for `fgv-spexgram-mcp` |
 | `ARCHIVE_NAME`, `ARCHIVE_WEB_HOST` | Name and `WEB_HOST` of Spexarkiv (`fgv-archive`)              |
+| `ARCHIVE_API_HOST` | Spexarkiv's `API_HOST`: audience in tokens for `fgv-archive-mcp` |
+| `SPEXIPEDIA_NAME`, `SPEXIPEDIA_WEB_HOST` | Name and `WEB_HOST` of Spexipedia (`fgv-spexipedia`)    |
+| `SPEXIPEDIA_API_HOST` | Spexipedia's `API_HOST`: audience in tokens for `fgv-spexipedia-mcp` |
 | `TAILNET_TAG`, `TAILSCALE_IMAGE` | Staging only: the Funnel machines, see *Tailnet*           |
-| `SPEXIFY_API_HOST`, `SPEXFLIX_MEDIA_HOST`, `SPEXGRAM_MEDIA_HOST`, `ACME_EMAIL` | Production only: the edge proxy, see *Edge proxy* |
+| `SPEXFLIX_MEDIA_HOST`, `SPEXGRAM_MEDIA_HOST`, `ACME_EMAIL` | Production only: the edge proxy, see *Edge proxy* |
 
 ## 4. First start
 
@@ -173,19 +180,21 @@ docker compose up -d                      # Keycloak, Umami, their databases and
 docker compose ps keycloak-server         # wait for "healthy"
 bin/configure-keycloak.sh
 bin/configure-umami.sh                    # prints UMAMI_WEBSITE_ID for each application's deploy repository
+bin/seed-users.sh                         # staging only: the sample users (see Sample users)
 ```
 
 Keycloak imports `fgv.json` only when the realm doesn't exist yet. Then `configure-keycloak.sh` makes these
 changes:
 
-- sets the secret of each client in `secrets/clients/` (`fgv-admin`, `spexregister`, `fgv-revival`,
+- sets the secret of each client in `secrets/clients/` (`fgv-admin`, `fgv-spexregister`, `fgv-revival`,
   `fgv-revival-service`). The secrets in `fgv.json` are public
 - gives the service account of `fgv-admin` the `realm-management` roles the applications need, including
-  `manage-events` so that loading sample data and migrating can turn off the event listener `fgv-admin-notification`
+  `manage-events` so that migrating can turn off the event listener `fgv-admin-notification`
 - gives the clients that call Keycloak's admin API (`fgv-admin`, `fgv-spexify-service`, `fgv-spexgram-service`,
   `fgv-archive-service`) the default client scope `kc-admin-api`. From Keycloak 26.8.2 the admin API only accepts
   tokens with the audience that scope adds. A realm imported before that version gets it from here
-- maps each web client (`spexregister`, `fgv-revival`, `fgv-spexify`, `fgv-spexflix`, `fgv-spexgram`, `fgv-archive`)
+- maps each web client (`fgv-spexregister`, `fgv-revival`, `fgv-spexify`, `fgv-spexflix`, `fgv-spexgram`, `fgv-archive`,
+  `fgv-spexipedia`)
   to the `USER` role of the others, so each web's application switcher lists the applications the user can open. A realm imported before
   that mapping existed gets it from here
 - selects `KEYCLOAK_THEME` as the realm's login, account and email theme
@@ -196,6 +205,25 @@ applications from the variables above.
 
 Then start the applications with their deploy repositories.
 
+### Sample users
+
+`bin/seed-users.sh` creates the sample users of every FGV application from `sample-users.tsv`: `admin@`, `editor@`,
+`author@`, `user@` and `no-access@fgv.nu`, Nyuppsättning's users with one purpose each (`observer@`, `directeur@`,
+`steering-group-finance@fgv.nu` and so on) and Spexregister's members `member01@` to `member50@fgv.nu` (the last five
+disabled). Each has a **fixed id** and its roles on every client. The applications' sample data refers to the users by
+those ids and never asks Keycloak, so no application needs `fgv-admin` for sample data, and their imports don't depend
+on each other's.
+
+- Run it once after *First start*, and again whenever you want the sample users reset: an existing sample user is
+  replaced (Keycloak's partial import with `OVERWRITE`), so their roles are exactly the table's afterwards. No other
+  user is touched.
+- The password is `secrets/SAMPLE_USER_PASSWORD` (made by `bin/init-secrets.sh`; the realm wants at least 12
+  characters), and `s3cr3t-s3cr3t` with `--local`. The event listener `fgv-admin-notification` is off meanwhile, so
+  no one is emailed.
+- It refuses to run when `DEPLOY_ENV=production`: production has no sample users.
+- Changing an id or a role in `sample-users.tsv` means changing it in the application that relies on it: the
+  constants in its `SampleDataImporter`.
+
 ### Umami
 
 Umami creates the user `admin` with password `umami` and has no setting to change that. `bin/configure-umami.sh`
@@ -203,9 +231,9 @@ therefore runs inside the container, before the route is published:
 
 - changes `admin`'s password to `secrets/UMAMI_ADMIN_PASSWORD`, which `bin/init-secrets.sh` generates
 - adds a website per application, unless it exists, and prints their IDs: `SPEXREGISTER_NAME` for
-  `SPEXREGISTER_WEB_HOST`, `FGV_REVIVAL_NAME` for `FGV_REVIVAL_WEB_HOST`, `SPEXIFY_NAME` for `SPEXIFY_WEB_HOST`,
-  `SPEXFLIX_NAME` for `SPEXFLIX_WEB_HOST`, `SPEXGRAM_NAME` for `SPEXGRAM_WEB_HOST` and `ARCHIVE_NAME` for
-  `ARCHIVE_WEB_HOST`
+  `SPEXREGISTER_WEB_HOST`, `REVIVAL_NAME` for `REVIVAL_WEB_HOST`, `SPEXIFY_NAME` for `SPEXIFY_WEB_HOST`,
+  `SPEXFLIX_NAME` for `SPEXFLIX_WEB_HOST`, `SPEXGRAM_NAME` for `SPEXGRAM_WEB_HOST`, `ARCHIVE_NAME` for
+  `ARCHIVE_WEB_HOST` and `SPEXIPEDIA_NAME` for `SPEXIPEDIA_WEB_HOST`
 
 Put each ID in its deploy repository's `.env` as `UMAMI_WEBSITE_ID` and recreate its web container. Without the ID the
 application sends nothing. You can run the script again safely. Once `admin` has two-factor authentication (under
@@ -306,8 +334,7 @@ docker compose down -v                    # removes the volumes: Keycloak realm 
 ```
 
 Stop the applications first, since their containers are attached to the shared network. Then repeat *First start*.
-With sample data, Spexregister and then Nyuppsättning create their sample users again on their next start. The secrets in
-`secrets/` and the dumps in `backups/` are kept.
+Run `bin/seed-users.sh` again for the sample users. The secrets in `secrets/` and the dumps in `backups/` are kept.
 
 ## Production
 
@@ -318,7 +345,7 @@ A production host differs in these ways:
 - no sample users: the realm in the Keycloak image contains none
 - `bin/backup-db.sh` scheduled in cron, with `backups/` copied to off-host storage
 - `KEYCLOAK_IMAGE` pinned to a release, e.g. `bloomper/fgv-keycloak:1.1.0`, instead of `develop`, `UMAMI_IMAGE` to
-  an exact version such as `ghcr.io/umami-software/umami:3.4.0` (it migrates its database on start), so that an
+  an exact version such as `ghcr.io/umami-software/umami:3.5.0` (it migrates its database on start), so that an
   update happens only when `.env` changes
 - no Cloudflare: `COMPOSE_FILE` leaves out `compose.tunnel.yaml`, `secrets/cloudflared.env` stays empty, and there
   is no Cloudflare Access. Production sits behind its own reverse proxy, which terminates TLS and forwards
@@ -336,11 +363,11 @@ own database and API locally:
 | `keycloak-server` | `https://auth.fgv.local.nu:8443/auth`, `keycloak-server:8080` on `fgv-local` |
 | `mailpit`         | `https://mail.fgv.local.nu:8443` or `http://localhost:8025`, SMTP on `mailpit:1025` and `localhost:1025` |
 | `umami-server`    | `https://analytics.fgv.local.nu:8443`, `umami-server:3000` on `fgv-local`  |
-| `caddy`           | Port 8443 with a local certificate, also for the applications' APIs and Spexflix's and Spexgram's media servers |
+| `caddy`           | Port 8443 with a local certificate, also for the applications' APIs and Spexflix's, Spexgram's and Spexipedia's media servers |
 
 The project is `fgv-infra-local` and the shared network is `fgv-local`, which the `docker-compose.yaml` of
 `spexregister-server`, `fgv-revival-server`, `fgv-spexify-server`, `fgv-spexflix-server`, `fgv-spexgram-server` and
-`fgv-archive-server` join. Running only one
+`fgv-archive-server` and `fgv-spexipedia-server` join. Running only one
 application is fine: start this stack and that application. Nyuppsättning shows spex as unavailable until Spexregister
 runs as well; Spexify's and Spexflix's sample data need Spexregister's.
 
@@ -350,6 +377,7 @@ Add to `/etc/hosts` (or the Windows equivalent):
 127.0.0.1 auth.fgv.local.nu mail.fgv.local.nu analytics.fgv.local.nu api.register.fgv.local.nu register.fgv.local.nu api.revival.fgv.local.nu revival.fgv.local.nu
 127.0.0.1 api.spexify.fgv.local.nu spexify.fgv.local.nu api.spexflix.fgv.local.nu spexflix.fgv.local.nu media.spexflix.fgv.local.nu
 127.0.0.1 api.spexgram.fgv.local.nu spexgram.fgv.local.nu media.spexgram.fgv.local.nu api.archive.fgv.local.nu archive.fgv.local.nu
+127.0.0.1 api.spexipedia.fgv.local.nu spexipedia.fgv.local.nu media.spexipedia.fgv.local.nu
 ```
 
 The secrets are files in `local/.docker/secrets/`, in git with the placeholder `CHANGE_ME`. Replace each one without
@@ -362,6 +390,7 @@ printf '%s' 'secret' > .docker/secrets/KEYCLOAK_MYSQL_USER_PASSWORD
 printf '%s' 'password' > .docker/secrets/KEYCLOAK_ADMIN_PASSWORD   # user KEYCLOAK_ADMIN in local/.env
 git update-index --skip-worktree .docker/secrets/*
 docker compose up -d && docker compose ps
+cd .. && bin/seed-users.sh --local      # the sample users, password s3cr3t-s3cr3t (see Sample users)
 ```
 
 - Keycloak imports the realm from `fgv.json` with the client secrets in it, which the applications' local
@@ -370,13 +399,13 @@ docker compose up -d && docker compose ps
 - `local/.env` sets the applications' local addresses, which the realm's redirect URIs and MCP audiences are made
   from: Spexregister's web on `http://localhost:3000`, Nyuppsättning's on `http://localhost:3001`, Spexify's on
   `http://localhost:3002`, Spexflix's on `http://localhost:3003`, Spexgram's on `http://localhost:3004`, Spexarkiv's on
-  `http://localhost:3005`, and the MCP endpoints of Spexregister and
-  Nyuppsättning.
+  `http://localhost:3005`, Spexipedia's on `http://localhost:3006`, and the MCP endpoints of Spexregister,
+  Nyuppsättning, Spexipedia, Spexify, Spexflix, Spexgram and Spexarkiv.
 - Registration uses Cloudflare's Turnstile test keys, which always pass. To see a failed challenge, add
   `TURNSTILE_SECRET_KEY=2x0000000000000000000000000000000AA` to `local/.env` and run
   `docker compose up -d keycloak-server`.
 - Umami keeps user `admin` and password `umami` locally. `local/bin/configure-umami.sh` adds a website for the hosts
-  of `SPEXREGISTER_URL`, `FGV_REVIVAL_URL`, `SPEXIFY_URL`, `SPEXFLIX_URL`, `SPEXGRAM_URL` and `ARCHIVE_URL` (all `localhost`, told apart by name) and
+  of `SPEXREGISTER_URL`, `REVIVAL_URL`, `SPEXIFY_URL`, `SPEXFLIX_URL`, `SPEXGRAM_URL`, `ARCHIVE_URL` and `SPEXIPEDIA_URL` (all `localhost`, told apart by name) and
   prints their IDs for
   `UMAMI_WEBSITE_ID` in each web's `.env.local`. Its
   database is in `local/.docker/umami-postgres/data`; empty that directory to start over. Browsers with *Do Not
@@ -384,17 +413,16 @@ docker compose up -d && docker compose ps
 - Caddy's root certificate is `local/.docker/caddy/data/caddy/pki/authorities/local/root.crt`. Import it into the
   operating system's trust store, and give it to tools that don't use that store, such as Node's
   `NODE_EXTRA_CA_CERTS`.
-- The deploy repos' `bin/init-secrets.sh` look for this repo in `../fgv-infra-deploy` and for Spexregister's deploy
-  repo in `../spexregister-deploy`. When the repos are grouped per application instead (`fgv/fgv-infra-deploy`,
-  `fgv/spexregister/spexregister-deploy`, `fgv/spexify/fgv-spexify-deploy`, ...), run
-  `. path/to/fgv-infra-deploy/local/bin/env.sh` first (bash or zsh). It sets `INFRA_DEPLOY` and `SPEXREGISTER_DEPLOY`
-  for that layout and keeps values already set.
+- The deploy repos' `bin/init-secrets.sh` look for this repo next to their checkout (`../fgv-infra-deploy`, as on the
+  hosts) or, when the repos are grouped per application (`fgv/fgv-infra-deploy`, `fgv/spexify/fgv-spexify-deploy`,
+  ...), one level further up. `INFRA_DEPLOY` overrides both.
 - Caddy forwards `api.register.fgv.local.nu` to the `spexregister-api` container, or, when that isn't running, to
   port 8080 on the host. Likewise `api.revival.fgv.local.nu` goes to `revival-api` or port 8081,
   `api.spexify.fgv.local.nu` to `spexify-api` or port 8082, `api.spexflix.fgv.local.nu` to `spexflix-api` or port
   8083, `media.spexflix.fgv.local.nu` to `spexflix-media` or port 8084, `api.spexgram.fgv.local.nu` to `spexgram-api`
   or port 8085, `media.spexgram.fgv.local.nu` to `spexgram-media` or port 8086, and `api.archive.fgv.local.nu` to
-  `archive-api` or port 8087.
+  `archive-api` or port 8087, `api.spexipedia.fgv.local.nu` to `spexipedia-api` or port 8088, and
+  `media.spexipedia.fgv.local.nu` to `spexipedia-media` or port 8089.
 
 ## Image tags
 
@@ -433,6 +461,7 @@ machines take no user seats.
 ```
 Browser ──https──▶ Cloudflare ──tunnel──▶ spexify-web, spexflix-web, archive-web (Cloudflare Access; Spexarkiv's share links open)
 Browser ──https──▶ Cloudflare ──tunnel──▶ spexgram-web (no Access: Spexgram has a public side)
+Browser ──https──▶ Cloudflare (CDN) ──tunnel──▶ spexipedia-web, and spexipedia-media for /media/* (no Access: Spexipedia is public)
 Browser, Subsonic apps ──https──▶ Tailscale Funnel ──▶ tailnet-spexify-api ──▶ spexify-api:8080
 Browser ──https──▶ Tailscale Funnel ──▶ tailnet-spexflix-media ──▶ spexflix-media:80
 Browser ──https──▶ Tailscale Funnel ──▶ tailnet-spexgram-media ──▶ spexgram-media:80
@@ -488,3 +517,13 @@ On a host that runs them:
 
 Production's own reverse proxy can serve these routes instead, or it leaves ports 80 and 443 to `edge-caddy` and gets
 its other hostnames added to `edge/Caddyfile`.
+
+The webs are not on this list: production's own reverse proxy serves them, as each deploy repository describes. One of
+them takes two routes on one hostname: Spexipedia's `WEB_HOST` sends `/media/*` to `spexipedia-media:80` (GET, HEAD and
+OPTIONS only; public images, cached long) and the rest to `spexipedia-web:3000` (see `fgv-spexipedia-deploy`,
+*Production*). Its API is reached by its web and the other applications on the shared network; its own hostname,
+`SPEXIPEDIA_API_HOST`, serves only its MCP endpoint (see `fgv-spexipedia-deploy`).
+
+Every application with an MCP server (Spexregister, Nyuppsättning, Spexipedia, Spexify, Spexflix, Spexgram and
+Spexarkiv) needs its `*_API_HOST` to reach `/api/mcp` and `/.well-known/oauth-protected-resource/*` on its API, since
+MCP clients run on the user's machine; Keycloak puts `https://<API_HOST>/api/mcp` in their tokens as audience.

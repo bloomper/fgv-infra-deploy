@@ -13,7 +13,7 @@ x-logging: &logging
     max-file: "5"
 
 x-tailnet: &tailnet
-  image: ${TAILSCALE_IMAGE:-tailscale/tailscale:v1.104.1}
+  image: ${TAILSCALE_IMAGE:-tailscale/tailscale:v1.104.7}
   env_file:
     - ./secrets/tailscale.env
   restart: unless-stopped

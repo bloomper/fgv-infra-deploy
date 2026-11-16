@@ -25,9 +25,15 @@ generate UMAMI_ADMIN_PASSWORD "$(random 24)"
 generate UMAMI_APP_SECRET "$(random 48)"
 generate UMAMI_TWO_FACTOR_ENCRYPTION_KEY "$(openssl rand -hex 32)"
 
+# The sample users' password (bin/seed-users.sh); not on production, which has no sample users
+if ! grep -qx 'DEPLOY_ENV=production' .env 2>/dev/null; then
+  generate SAMPLE_USER_PASSWORD "$(random 16)"
+fi
+
 # Client secrets, set in the realm by bin/configure-keycloak.sh and copied by the applications' bin/init-secrets.sh
-for client in fgv-admin spexregister fgv-revival fgv-revival-service fgv-spexify fgv-spexify-service fgv-spexflix fgv-spexflix-service \
-    fgv-spexgram fgv-spexgram-service fgv-archive fgv-archive-service; do
+for client in fgv-admin fgv-spexregister fgv-revival fgv-revival-service fgv-spexify fgv-spexify-service fgv-spexflix fgv-spexflix-service \
+    fgv-spexgram fgv-spexgram-service fgv-archive fgv-archive-service fgv-spexipedia fgv-spexipedia-service \
+    fgv-spexregister-service; do
   generate "clients/$client" "$(random 32)"
 done
 

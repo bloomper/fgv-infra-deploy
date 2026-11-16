@@ -11,7 +11,7 @@ x-logging: &logging
 
 services:
   edge-caddy:
-    image: ${CADDY_IMAGE:-caddy:2.10}
+    image: ${CADDY_IMAGE:-caddy:2.11}
     ports:
       - "80:80"
       - "443:443"

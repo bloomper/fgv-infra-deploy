@@ -18,21 +18,23 @@ if [[ ${1:-} == local ]]; then
   password=umami
   websites=(
     "${SPEXREGISTER_NAME:-Spexregister}" "$(host "$SPEXREGISTER_URL")" "Spexregister web's .env.local"
-    "${FGV_REVIVAL_NAME:-Nyuppsättning}" "$(host "$FGV_REVIVAL_URL")" "Nyuppsättning web's .env.local"
+    "${REVIVAL_NAME:-Nyuppsättning}" "$(host "$REVIVAL_URL")" "Nyuppsättning web's .env.local"
     "${SPEXIFY_NAME:-Spexify}" "$(host "${SPEXIFY_URL:-http://localhost:3002}")" "Spexify web's .env.local"
     "${SPEXFLIX_NAME:-Spexflix}" "$(host "${SPEXFLIX_URL:-http://localhost:3003}")" "Spexflix web's .env.local"
     "${SPEXGRAM_NAME:-Spexgram}" "$(host "${SPEXGRAM_URL:-http://localhost:3004}")" "Spexgram web's .env.local"
     "${ARCHIVE_NAME:-Spexarkiv}" "$(host "${ARCHIVE_URL:-http://localhost:3005}")" "Spexarkiv web's .env.local"
+    "${SPEXIPEDIA_NAME:-Spexipedia}" "$(host "${SPEXIPEDIA_URL:-http://localhost:3006}")" "Spexipedia web's .env.local"
   )
 else
   password=$(cat secrets/UMAMI_ADMIN_PASSWORD)
   websites=(
     "${SPEXREGISTER_NAME:-Spexregister}" "$SPEXREGISTER_WEB_HOST" "spexregister-deploy's .env"
-    "${FGV_REVIVAL_NAME:-Nyuppsättning}" "$FGV_REVIVAL_WEB_HOST" "fgv-revival-deploy's .env"
+    "${REVIVAL_NAME:-Nyuppsättning}" "$REVIVAL_WEB_HOST" "fgv-revival-deploy's .env"
     "${SPEXIFY_NAME:-Spexify}" "$SPEXIFY_WEB_HOST" "fgv-spexify-deploy's .env"
     "${SPEXFLIX_NAME:-Spexflix}" "$SPEXFLIX_WEB_HOST" "fgv-spexflix-deploy's .env"
     "${SPEXGRAM_NAME:-Spexgram}" "$SPEXGRAM_WEB_HOST" "fgv-spexgram-deploy's .env"
     "${ARCHIVE_NAME:-Spexarkiv}" "$ARCHIVE_WEB_HOST" "fgv-archive-deploy's .env"
+    "${SPEXIPEDIA_NAME:-Spexipedia}" "$SPEXIPEDIA_WEB_HOST" "fgv-spexipedia-deploy's .env"
   )
 fi
 

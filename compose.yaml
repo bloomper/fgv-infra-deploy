@@ -6,6 +6,10 @@ x-logging: &logging
     max-size: 10m
     max-file: "5"
 
+# Keeps the processes from gaining privileges through setuid binaries
+x-security-opt: &security-opt
+  - no-new-privileges:true
+
 services:
   keycloak-mysql:
     image: ${MYSQL_IMAGE:-mysql:8.4}
@@ -16,6 +20,7 @@ services:
       MYSQL_PASSWORD_FILE: /run/secrets/KEYCLOAK_MYSQL_USER_PASSWORD
     restart: unless-stopped
     logging: *logging
+    security_opt: *security-opt
     healthcheck:
       test: [ "CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent" ]
       interval: 10s
@@ -59,17 +64,24 @@ services:
       SPEXREGISTER_NAME: ${SPEXREGISTER_NAME:-Spexregister}
       SPEXREGISTER_URL: https://${SPEXREGISTER_WEB_HOST:?SPEXREGISTER_WEB_HOST must be set in .env}
       SPEXREGISTER_MCP_URL: https://${SPEXREGISTER_API_HOST:?SPEXREGISTER_API_HOST must be set in .env}/api/mcp
-      FGV_REVIVAL_NAME: ${FGV_REVIVAL_NAME:-Nyuppsättning}
-      FGV_REVIVAL_URL: https://${FGV_REVIVAL_WEB_HOST:?FGV_REVIVAL_WEB_HOST must be set in .env}
-      FGV_REVIVAL_MCP_URL: https://${FGV_REVIVAL_API_HOST:?FGV_REVIVAL_API_HOST must be set in .env}/api/mcp
+      REVIVAL_NAME: ${REVIVAL_NAME:-Nyuppsättning}
+      REVIVAL_URL: https://${REVIVAL_WEB_HOST:?REVIVAL_WEB_HOST must be set in .env}
+      REVIVAL_MCP_URL: https://${REVIVAL_API_HOST:?REVIVAL_API_HOST must be set in .env}/api/mcp
       SPEXIFY_NAME: ${SPEXIFY_NAME:-Spexify}
       SPEXIFY_URL: https://${SPEXIFY_WEB_HOST:?SPEXIFY_WEB_HOST must be set in .env}
+      SPEXIFY_MCP_URL: https://${SPEXIFY_API_HOST:?SPEXIFY_API_HOST must be set in .env}/api/mcp
       SPEXFLIX_NAME: ${SPEXFLIX_NAME:-Spexflix}
       SPEXFLIX_URL: https://${SPEXFLIX_WEB_HOST:?SPEXFLIX_WEB_HOST must be set in .env}
+      SPEXFLIX_MCP_URL: https://${SPEXFLIX_API_HOST:?SPEXFLIX_API_HOST must be set in .env}/api/mcp
       SPEXGRAM_NAME: ${SPEXGRAM_NAME:-Spexgram}
       SPEXGRAM_URL: https://${SPEXGRAM_WEB_HOST:?SPEXGRAM_WEB_HOST must be set in .env}
+      SPEXGRAM_MCP_URL: https://${SPEXGRAM_API_HOST:?SPEXGRAM_API_HOST must be set in .env}/api/mcp
       ARCHIVE_NAME: ${ARCHIVE_NAME:-Spexarkiv}
       ARCHIVE_URL: https://${ARCHIVE_WEB_HOST:?ARCHIVE_WEB_HOST must be set in .env}
+      ARCHIVE_MCP_URL: https://${ARCHIVE_API_HOST:?ARCHIVE_API_HOST must be set in .env}/api/mcp
+      SPEXIPEDIA_NAME: ${SPEXIPEDIA_NAME:-Spexipedia}
+      SPEXIPEDIA_URL: https://${SPEXIPEDIA_WEB_HOST:?SPEXIPEDIA_WEB_HOST must be set in .env}
+      SPEXIPEDIA_MCP_URL: https://${SPEXIPEDIA_API_HOST:?SPEXIPEDIA_API_HOST must be set in .env}/api/mcp
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_FROM: ${MAIL_FROM}
@@ -79,6 +91,7 @@ services:
       SMTP_SSL: ${SMTP_SSL:-false}
     restart: unless-stopped
     logging: *logging
+    security_opt: *security-opt
     healthcheck:
       test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000;printf \"GET /auth/health/ready HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n\" >&3;grep \"HTTP/1.1 200 OK\" <&3" ]
       interval: 10s
@@ -105,6 +118,7 @@ services:
       POSTGRES_PASSWORD_FILE: /run/secrets/UMAMI_POSTGRES_PASSWORD
     restart: unless-stopped
     logging: *logging
+    security_opt: *security-opt
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\"" ]
       interval: 10s
@@ -129,6 +143,7 @@ services:
     init: true
     restart: unless-stopped
     logging: *logging
+    security_opt: *security-opt
     healthcheck:
       test: [ "CMD", "curl", "-fsS", "-o", "/dev/null", "http://127.0.0.1:3000/api/heartbeat" ]
       interval: 10s

@@ -7,7 +7,7 @@ x-logging: &logging
 services:
   # Catches the mail of Keycloak and of the applications on the shared network, which send to mailpit:1025
   mailpit:
-    image: axllent/mailpit:v1.31.4
+    image: axllent/mailpit:v1.33.1
     restart: unless-stopped
     logging: *logging
     volumes:

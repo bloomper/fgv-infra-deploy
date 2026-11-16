@@ -54,9 +54,9 @@ services:
       SPEXREGISTER_NAME: ${SPEXREGISTER_NAME:-Spexregister}
       SPEXREGISTER_URL: ${SPEXREGISTER_URL}
       SPEXREGISTER_MCP_URL: ${SPEXREGISTER_MCP_URL}
-      FGV_REVIVAL_NAME: ${FGV_REVIVAL_NAME:-Nyuppsättning}
-      FGV_REVIVAL_URL: ${FGV_REVIVAL_URL}
-      FGV_REVIVAL_MCP_URL: ${FGV_REVIVAL_MCP_URL}
+      REVIVAL_NAME: ${REVIVAL_NAME:-Nyuppsättning}
+      REVIVAL_URL: ${REVIVAL_URL}
+      REVIVAL_MCP_URL: ${REVIVAL_MCP_URL}
       SPEXIFY_NAME: ${SPEXIFY_NAME:-Spexify}
       SPEXIFY_URL: ${SPEXIFY_URL:-http://localhost:3002}
       SPEXFLIX_NAME: ${SPEXFLIX_NAME:-Spexflix}
@@ -65,6 +65,13 @@ services:
       SPEXGRAM_URL: ${SPEXGRAM_URL:-http://localhost:3004}
       ARCHIVE_NAME: ${ARCHIVE_NAME:-Spexarkiv}
       ARCHIVE_URL: ${ARCHIVE_URL:-http://localhost:3005}
+      SPEXIPEDIA_NAME: ${SPEXIPEDIA_NAME:-Spexipedia}
+      SPEXIPEDIA_URL: ${SPEXIPEDIA_URL:-http://localhost:3006}
+      SPEXIPEDIA_MCP_URL: ${SPEXIPEDIA_MCP_URL}
+      SPEXIFY_MCP_URL: ${SPEXIFY_MCP_URL}
+      SPEXFLIX_MCP_URL: ${SPEXFLIX_MCP_URL}
+      SPEXGRAM_MCP_URL: ${SPEXGRAM_MCP_URL}
+      ARCHIVE_MCP_URL: ${ARCHIVE_MCP_URL}
       SMTP_HOST: mailpit
       SMTP_PORT: 1025
       SMTP_FROM: ${MAIL_FROM}
@@ -107,7 +114,7 @@ services:
       - umami_postgres_data:/var/lib/postgresql/data
 
   umami-server:
-    image: ${UMAMI_IMAGE:-ghcr.io/umami-software/umami:3.4}
+    image: ${UMAMI_IMAGE:-ghcr.io/umami-software/umami:3.5}
     environment:
       DATABASE_URL: postgresql://umami:umami@umami-postgres:5432/umami
       APP_SECRET: local-umami-app-secret
@@ -128,7 +135,7 @@ services:
       - fgv
 
   mailpit:
-    image: axllent/mailpit:v1.31.4
+    image: axllent/mailpit:v1.33.1
     restart: unless-stopped
     ports:
       - "1025:1025"
@@ -138,7 +145,7 @@ services:
       - fgv
 
   caddy:
-    image: caddy:2.10
+    image: caddy:2.11
     restart: unless-stopped
     ports:
       - "8443:8443"
