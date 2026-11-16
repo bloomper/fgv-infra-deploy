@@ -57,6 +57,7 @@ and the project's own network with them, e.g. `fgv-infra-staging_keycloak_mysql_
 | `bin/init-secrets.sh`         | Generates random secrets into `secrets/` (never overwrites existing ones)  |
 | `bin/configure-keycloak.sh`   | Sets client secrets, theme and mail settings in the realm                  |
 | `bin/configure-umami.sh`      | Sets Umami's admin password and adds the applications' websites            |
+| `bin/seed-users.sh`, `sample-users.tsv` | Creates or resets the sample users of every application (staging and local only, see *Sample users*) |
 | `bin/backup-db.sh`            | Dumps the databases into `backups/`, pruning dumps older than 14 days      |
 | `local/`                      | The local development stack, see *Local development*                       |
 
@@ -174,6 +175,7 @@ docker compose up -d                      # Keycloak, Umami, their databases and
 docker compose ps keycloak-server         # wait for "healthy"
 bin/configure-keycloak.sh
 bin/configure-umami.sh                    # prints UMAMI_WEBSITE_ID for each application's deploy repository
+bin/seed-users.sh                         # staging only: the sample users (see Sample users)
 ```
 
 Keycloak imports `fgv.json` only when the realm doesn't exist yet. Then `configure-keycloak.sh` makes these
@@ -182,7 +184,7 @@ changes:
 - sets the secret of each client in `secrets/clients/` (`fgv-admin`, `spexregister`, `fgv-revival`,
   `fgv-revival-service`). The secrets in `fgv.json` are public
 - gives the service account of `fgv-admin` the `realm-management` roles the applications need, including
-  `manage-events` so that loading sample data and migrating can turn off the event listener `fgv-admin-notification`
+  `manage-events` so that migrating can turn off the event listener `fgv-admin-notification`
 - gives the clients that call Keycloak's admin API (`fgv-admin`, `fgv-spexify-service`, `fgv-spexgram-service`,
   `fgv-archive-service`) the default client scope `kc-admin-api`. From Keycloak 26.8.2 the admin API only accepts
   tokens with the audience that scope adds. A realm imported before that version gets it from here
@@ -197,6 +199,25 @@ You can run it again safely. Everything else comes from `fgv.json`, which reads 
 applications from the variables above.
 
 Then start the applications with their deploy repositories.
+
+### Sample users
+
+`bin/seed-users.sh` creates the sample users of every FGV application from `sample-users.tsv`: `admin@`, `editor@`,
+`author@`, `user@` and `no-access@fgv.nu`, Nyuppsättning's users with one purpose each (`observer@`, `directeur@`,
+`steering-group-finance@fgv.nu` and so on) and Spexregister's members `member01@` to `member50@fgv.nu` (the last five
+disabled). Each has a **fixed id** and its roles on every client. The applications' sample data refers to the users by
+those ids and never asks Keycloak, so no application needs `fgv-admin` for sample data, and their imports don't depend
+on each other's.
+
+- Run it once after *First start*, and again whenever you want the sample users reset: an existing sample user is
+  replaced (Keycloak's partial import with `OVERWRITE`), so their roles are exactly the table's afterwards. No other
+  user is touched.
+- The password is `secrets/SAMPLE_USER_PASSWORD` (made by `bin/init-secrets.sh`; the realm wants at least 12
+  characters), and `s3cr3t-s3cr3t` with `--local`. The event listener `fgv-admin-notification` is off meanwhile, so
+  no one is emailed.
+- It refuses to run when `DEPLOY_ENV=production`: production has no sample users.
+- Changing an id or a role in `sample-users.tsv` means changing it in the application that relies on it: the
+  constants in its `SampleDataImporter`.
 
 ### Umami
 
@@ -308,8 +329,7 @@ docker compose down -v                    # removes the volumes: Keycloak realm 
 ```
 
 Stop the applications first, since their containers are attached to the shared network. Then repeat *First start*.
-With sample data, Spexregister and then Nyuppsättning create their sample users again on their next start. The secrets in
-`secrets/` and the dumps in `backups/` are kept.
+Run `bin/seed-users.sh` again for the sample users. The secrets in `secrets/` and the dumps in `backups/` are kept.
 
 ## Production
 
@@ -365,6 +385,7 @@ printf '%s' 'secret' > .docker/secrets/KEYCLOAK_MYSQL_USER_PASSWORD
 printf '%s' 'password' > .docker/secrets/KEYCLOAK_ADMIN_PASSWORD   # user KEYCLOAK_ADMIN in local/.env
 git update-index --skip-worktree .docker/secrets/*
 docker compose up -d && docker compose ps
+cd .. && bin/seed-users.sh --local      # the sample users, password s3cr3t-s3cr3t (see Sample users)
 ```
 
 - Keycloak imports the realm from `fgv.json` with the client secrets in it, which the applications' local
