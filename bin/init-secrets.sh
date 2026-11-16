@@ -33,7 +33,7 @@ fi
 # Client secrets, set in the realm by bin/configure-keycloak.sh and copied by the applications' bin/init-secrets.sh
 for client in fgv-admin fgv-spexregister fgv-revival fgv-revival-service fgv-spexify fgv-spexify-service fgv-spexflix fgv-spexflix-service \
     fgv-spexgram fgv-spexgram-service fgv-archive fgv-archive-service fgv-spexipedia fgv-spexipedia-service \
-    fgv-spexregister-service; do
+    fgv-spexregister-service fgv-content-migration; do
   generate "clients/$client" "$(random 32)"
 done
 
