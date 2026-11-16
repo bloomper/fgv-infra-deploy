@@ -157,9 +157,9 @@ printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 | `SPEXREGISTER_NAME`     | Name of the `spexregister` client, shown on login and in the approval email |
 | `SPEXREGISTER_WEB_HOST` | Spexregister's `WEB_HOST`: the only redirect target after login and logout |
 | `SPEXREGISTER_API_HOST` | Spexregister's `API_HOST`: audience in tokens for `spexregister-mcp` |
-| `FGV_REVIVAL_NAME`      | Name of the `fgv-revival` client                              |
-| `FGV_REVIVAL_WEB_HOST`  | Nyuppsättning's `WEB_HOST`                                      |
-| `FGV_REVIVAL_API_HOST`  | Nyuppsättning's `API_HOST`: audience in tokens for `fgv-revival-mcp` |
+| `REVIVAL_NAME`      | Name of the `fgv-revival` client                              |
+| `REVIVAL_WEB_HOST`  | Nyuppsättning's `WEB_HOST`                                      |
+| `REVIVAL_API_HOST`  | Nyuppsättning's `API_HOST`: audience in tokens for `fgv-revival-mcp` |
 | `SPEXIFY_NAME`, `SPEXIFY_WEB_HOST` | Name and `WEB_HOST` of Spexify (`fgv-spexify`), which Keycloak sends users back to |
 | `SPEXFLIX_NAME`, `SPEXFLIX_WEB_HOST` | Name and `WEB_HOST` of Spexflix (`fgv-spexflix`)              |
 | `SPEXGRAM_NAME`, `SPEXGRAM_WEB_HOST` | Name and `WEB_HOST` of Spexgram (`fgv-spexgram`)              |
@@ -226,7 +226,7 @@ therefore runs inside the container, before the route is published:
 
 - changes `admin`'s password to `secrets/UMAMI_ADMIN_PASSWORD`, which `bin/init-secrets.sh` generates
 - adds a website per application, unless it exists, and prints their IDs: `SPEXREGISTER_NAME` for
-  `SPEXREGISTER_WEB_HOST`, `FGV_REVIVAL_NAME` for `FGV_REVIVAL_WEB_HOST`, `SPEXIFY_NAME` for `SPEXIFY_WEB_HOST`,
+  `SPEXREGISTER_WEB_HOST`, `REVIVAL_NAME` for `REVIVAL_WEB_HOST`, `SPEXIFY_NAME` for `SPEXIFY_WEB_HOST`,
   `SPEXFLIX_NAME` for `SPEXFLIX_WEB_HOST`, `SPEXGRAM_NAME` for `SPEXGRAM_WEB_HOST`, `ARCHIVE_NAME` for
   `ARCHIVE_WEB_HOST` and `SPEXIPEDIA_NAME` for `SPEXIPEDIA_WEB_HOST`
 
@@ -400,7 +400,7 @@ cd .. && bin/seed-users.sh --local      # the sample users, password s3cr3t-s3cr
   `TURNSTILE_SECRET_KEY=2x0000000000000000000000000000000AA` to `local/.env` and run
   `docker compose up -d keycloak-server`.
 - Umami keeps user `admin` and password `umami` locally. `local/bin/configure-umami.sh` adds a website for the hosts
-  of `SPEXREGISTER_URL`, `FGV_REVIVAL_URL`, `SPEXIFY_URL`, `SPEXFLIX_URL`, `SPEXGRAM_URL`, `ARCHIVE_URL` and `SPEXIPEDIA_URL` (all `localhost`, told apart by name) and
+  of `SPEXREGISTER_URL`, `REVIVAL_URL`, `SPEXIFY_URL`, `SPEXFLIX_URL`, `SPEXGRAM_URL`, `ARCHIVE_URL` and `SPEXIPEDIA_URL` (all `localhost`, told apart by name) and
   prints their IDs for
   `UMAMI_WEBSITE_ID` in each web's `.env.local`. Its
   database is in `local/.docker/umami-postgres/data`; empty that directory to start over. Browsers with *Do Not

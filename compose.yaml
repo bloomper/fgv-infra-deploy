@@ -64,9 +64,9 @@ services:
       SPEXREGISTER_NAME: ${SPEXREGISTER_NAME:-Spexregister}
       SPEXREGISTER_URL: https://${SPEXREGISTER_WEB_HOST:?SPEXREGISTER_WEB_HOST must be set in .env}
       SPEXREGISTER_MCP_URL: https://${SPEXREGISTER_API_HOST:?SPEXREGISTER_API_HOST must be set in .env}/api/mcp
-      FGV_REVIVAL_NAME: ${FGV_REVIVAL_NAME:-Nyuppsättning}
-      FGV_REVIVAL_URL: https://${FGV_REVIVAL_WEB_HOST:?FGV_REVIVAL_WEB_HOST must be set in .env}
-      FGV_REVIVAL_MCP_URL: https://${FGV_REVIVAL_API_HOST:?FGV_REVIVAL_API_HOST must be set in .env}/api/mcp
+      REVIVAL_NAME: ${REVIVAL_NAME:-Nyuppsättning}
+      REVIVAL_URL: https://${REVIVAL_WEB_HOST:?REVIVAL_WEB_HOST must be set in .env}
+      REVIVAL_MCP_URL: https://${REVIVAL_API_HOST:?REVIVAL_API_HOST must be set in .env}/api/mcp
       SPEXIFY_NAME: ${SPEXIFY_NAME:-Spexify}
       SPEXIFY_URL: https://${SPEXIFY_WEB_HOST:?SPEXIFY_WEB_HOST must be set in .env}
       SPEXFLIX_NAME: ${SPEXFLIX_NAME:-Spexflix}
