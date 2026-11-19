@@ -60,6 +60,8 @@ and the project's own network with them, e.g. `fgv-infra-staging_keycloak_mysql_
 | `bin/seed-users.sh`, `sample-users.tsv` | Creates or resets the sample users of every application (staging and local only, see *Sample users*) |
 | `bin/backup-db.sh`            | Dumps the databases into `backups/`, pruning dumps older than 14 days      |
 | `local/`                      | The local development stack, see *Local development*                       |
+| `docs/data-ownership.md`      | Which application is the master of which information, the copies and how the applications talk |
+| `docs/var-ligger-vad.md`      | The same for editors, in Swedish: where each kind of information is entered |
 
 `COMPOSE_FILE` in `.env` selects the overlays, so plain `docker compose ...` commands work on each host.
 
