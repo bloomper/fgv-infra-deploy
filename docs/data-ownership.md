@@ -98,7 +98,7 @@ flowchart LR
 
 | Feed | Master | Followers | What | How |
 |---|---|---|---|---|
-| `baseDataChanges` | Spexipedia | Spexregister, Spexarkivet, Spexify, Spexflix, Spexgram | Spex categories, spex, task categories, tasks, characters, numbers (with kind, first line and credits as spexare ids or outside names) | GraphQL, `SYNC`; pull every 5 min from a cursor; `POST /api/sync/notify` from Spexipedia to pull at once; `UPSERT`, `RETIRE`, `MERGE` |
+| `baseDataChanges` | Spexipedia | Spexregister, Spexarkivet, Spexify, Spexflix, Spexgram | Spex categories, spex, task categories, tasks, characters, numbers | GraphQL, `SYNC`; pull every 5 min from a cursor; `POST /api/sync/notify` from Spexipedia to pull at once; `UPSERT`, `RETIRE`, `MERGE` |
 | `membershipChanges` (planned) | Medlemskap | Spexregister | PAID and WAIVED FGV memberships | Same pattern |
 
 ### 3.2 Copies
@@ -107,7 +107,7 @@ flowchart LR
 |---|---|---|
 | Spexregister | `spex_category`, `spex`, `spex_details`, `task_category`, `task`, `spex_character`; `membership` (FGV, planned) | Spexipedia feed; Medlemskap feed |
 | Spexarkivet | `spex`, `number`, `spex_character`, `spexipedia_task_category`, `spexipedia_task`, `spexipedia_category`; `instrument` rows with `task_id` | Spexipedia feed |
-| Spexify | `album_spex`, `album.spex_*`, `spexipedia_category`, `track.number_*` (id, title, kind, credits) | Spexipedia feed |
+| Spexify | `album_spex`, `album.spex_*`, `spexipedia_category`, `track.number_*` (id, title, kind); a number's credits only in memory, ≤ 10 min | Spexipedia feed; `numbersByIds` |
 | Spexflix | `video_spex`, `spexipedia_category`; `chapter.spexify_track_title` | Spexipedia feed; Spexify |
 | Spexgram | `album_spex`, `spexipedia_category` | Spexipedia feed |
 | Nyuppsättning | none (in-memory caches only) | — |
@@ -122,7 +122,7 @@ flowchart LR
 | Spexipedia → Spexflix | link role | Videos of a spex |
 | Spexipedia → Spexgram | `SPEXIPEDIA` / public | Picked items, albums of a spex |
 | Spexipedia → Spexarkivet, Spexify, Spexflix, Spexgram | `IMPORT` | Spex packages |
-| Spexify → Spexipedia | public / `SYNC` | Numbers with credits, characters, number kinds |
+| Spexify → Spexipedia | `SYNC` | Numbers with their credits (names as a logged-in user sees them, cached ≤ 10 min, never stored), characters, number kinds |
 | Spexify → Spexarkivet | `SPEXIFY` | Sheet music by number id |
 | Spexify → Spexflix | link role | Chapters linked to tracks |
 | Spexflix → Spexify | link role | Tracks of a spex, for chapters |
@@ -139,4 +139,4 @@ flowchart LR
 - Spexflix's video credits are free text "as shown on screen", not spexare references.
 - Changes to follow from this page (2026-11-19): Spexipedia's recordings move to Spexify albums, Spexipedia's books
   move to Spexarkivet, Spexify tracks take their credits from the number, Spexarkivet drops the number's old
-  lyricist and composer columns, and every web gets *Ändra i \<app\>* links.
+  lyricist and composer columns (servers done 2026-11-19), and every web gets *Ändra i \<app\>* links.
