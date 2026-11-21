@@ -101,6 +101,11 @@ flowchart LR
 | `baseDataChanges` | Spexipedia | Spexregister, Spexarkivet, Spexify, Spexflix, Spexgram | Spex categories, spex, task categories, tasks, characters, numbers | GraphQL, `SYNC`; pull every 5 min from a cursor; `POST /api/sync/notify` from Spexipedia to pull at once; `UPSERT`, `RETIRE`, `MERGE` |
 | `membershipChanges` (planned) | Medlemskap | Spexregister | PAID and WAIVED FGV memberships | Same pattern |
 
+A follower applies a page of changes in one transaction. When that fails it applies them one at a time; a change that
+still fails at five pulls in a row is recorded as skipped and left out, so that it cannot hold up the changes after
+it. Admins see the skipped changes on the follower's maintenance page: the copy lacks them until the record is changed
+again in the master (or, in Spexregister and Spexarkivet, the whole feed is pulled again).
+
 ### 3.2 Copies
 
 | Application | Copy tables | From |
