@@ -8,6 +8,11 @@ statistics, the shared Docker network and, on staging, Mailpit. Each application
 | `fgv-infra-deploy`       | Keycloak, Umami, their databases, the shared network, Mailpit on staging |
 | [spexregister-deploy][1] | Spexregister server, web and database                          |
 | [fgv-revival-deploy][2]  | Nyuppsättning server, web and database                         |
+| [fgv-spexipedia-deploy][6] | Spexipedia server, web, database and media server            |
+| [fgv-archive-deploy][7]  | Spexarkivet server, worker, web and database                   |
+| [fgv-spexify-deploy][8]  | Spexify server, web, database and Navidrome                    |
+| [fgv-spexflix-deploy][9] | Spexflix server, worker, web, database and media server        |
+| [fgv-spexgram-deploy][10] | Spexgram server, web, database, media server and Immich       |
 
 Cloudflare is used on staging only. Staging is published through a Cloudflare Tunnel, as below; production uses no
 Cloudflare Tunnel, DNS or Access and sits behind its own reverse proxy instead (see *Production*). The one Cloudflare
@@ -188,8 +193,9 @@ bin/seed-users.sh                         # staging only: the sample users (see 
 Keycloak imports `fgv.json` only when the realm doesn't exist yet. Then `configure-keycloak.sh` makes these
 changes:
 
-- sets the secret of each client in `secrets/clients/` (`fgv-admin`, `fgv-spexregister`, `fgv-revival`,
-  `fgv-revival-service`). The secrets in `fgv.json` are public
+- sets the secret of each client in `secrets/clients/`: `fgv-admin`, every application's web client
+  (`fgv-spexregister`, `fgv-revival`, `fgv-spexify` and so on), every service account (`fgv-revival-service`,
+  `fgv-spexipedia-service` and so on) and `fgv-content-migration`. The secrets in `fgv.json` are public
 - gives the service account of `fgv-admin` the `realm-management` roles the applications need, including
   `manage-events` so that migrating can turn off the event listener `fgv-admin-notification`
 - gives the clients that call Keycloak's admin API (`fgv-admin`, `fgv-spexify-service`, `fgv-spexgram-service`,
@@ -443,6 +449,11 @@ release tags are never overwritten.
 [3]: https://github.com/bloomper/fgv-keycloak
 [4]: https://github.com/umami-software/umami
 [5]: https://tailscale.com/docs/features/tailscale-funnel
+[6]: https://github.com/bloomper/fgv-spexipedia-deploy
+[7]: https://github.com/bloomper/fgv-archive-deploy
+[8]: https://github.com/bloomper/fgv-spexify-deploy
+[9]: https://github.com/bloomper/fgv-spexflix-deploy
+[10]: https://github.com/bloomper/fgv-spexgram-deploy
 
 ## Tailnet (staging)
 
