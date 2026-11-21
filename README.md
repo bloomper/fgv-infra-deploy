@@ -183,12 +183,18 @@ printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 ## 4. First start
 
 ```shell
-docker compose up -d                      # Keycloak, Umami, their databases and, on staging, Mailpit
+docker compose up -d keycloak-server umami-server   # with their databases; not yet the tunnel or the edge proxy
 docker compose ps keycloak-server         # wait for "healthy"
-bin/configure-keycloak.sh
+bin/configure-keycloak.sh                 # replaces the public client secrets: before anything is reachable
 bin/configure-umami.sh                    # prints UMAMI_WEBSITE_ID for each application's deploy repository
+docker compose up -d                      # the rest: the tunnel and Mailpit on staging, the edge proxy on production
 bin/seed-users.sh                         # staging only: the sample users (see Sample users)
 ```
+
+Keep that order. The client secrets in `fgv.json` are in a public repository, `fgv-admin`'s among them, and Umami
+starts with a known password, so both scripts must have run before the tunnel, the edge proxy or production's own
+reverse proxy lets anyone reach Keycloak or Umami. On production, point the reverse proxy at `keycloak-server` and
+`umami-server` only afterwards. The same holds after *Resetting staging data*.
 
 Keycloak imports `fgv.json` only when the realm doesn't exist yet. Then `configure-keycloak.sh` makes these
 changes:
@@ -360,6 +366,8 @@ A production host differs in these ways:
   `KEYCLOAK_HOST` to `keycloak-server:8080` and `ANALYTICS_HOST` to `umami-server:3000` (the table in section 2,
   without Mailpit), and the hostnames in *Edge proxy*. Restrict Keycloak's admin console (`/auth/admin`) and Umami
   there instead of with Access. Turnstile is used as on staging.
+- after the one-time content migration, the client `fgv-content-migration` is disabled (see `fgv-content-migration`,
+  *When the migration is done*): it may write through five applications' import APIs and nothing needs it afterwards
 
 ## Local development
 
