@@ -543,7 +543,7 @@ The webs are not on this list: production's own reverse proxy serves them, as ea
 them takes two routes on one hostname: Spexipedia's `WEB_HOST` sends `/media/*` to `spexipedia-media:80` (GET, HEAD and
 OPTIONS only; public images, cached long) and the rest to `spexipedia-web:3000` (see `fgv-spexipedia-deploy`,
 *Production*). Its API is reached by its web and the other applications on the shared network; its own hostname,
-`SPEXIPEDIA_API_HOST`, serves only its MCP endpoint (see `fgv-spexipedia-deploy`).
+`SPEXIPEDIA_API_HOST`, serves the whole API, like the other applications' (see `fgv-spexipedia-deploy`).
 
 Every application with an MCP server (Spexregister, Nyuppsättning, Spexipedia, Spexify, Spexflix, Spexgram and
 Spexarkiv) needs its `*_API_HOST` to reach `/api/mcp` and `/.well-known/oauth-protected-resource/*` on its API, since
