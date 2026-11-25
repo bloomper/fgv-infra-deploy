@@ -3,9 +3,9 @@
 # means changing it in the application that uses it (see README, Sample users).
 #
 # id	email	first name	last name	enabled	client roles (client:ROLE,ROLE ...; - for none)
-00000000-0000-4000-8000-000000000001	admin@fgv.nu	Admin	Exempel	true	fgv-spexregister:USER,EDITOR,ADMIN fgv-revival:USER,SUPER_ADMIN fgv-spexify:USER,EDITOR,ADMIN fgv-spexflix:USER,EDITOR,ADMIN fgv-spexgram:USER,EDITOR,ADMIN fgv-archive:USER,EDITOR,ADMIN fgv-spexipedia:USER,AUTHOR,EDITOR,ADMIN
-00000000-0000-4000-8000-000000000002	editor@fgv.nu	Editor	Exempel	true	fgv-spexregister:USER,EDITOR fgv-spexify:USER,EDITOR fgv-spexflix:USER,EDITOR fgv-spexgram:USER,EDITOR fgv-archive:USER,EDITOR fgv-spexipedia:USER,AUTHOR,EDITOR
-00000000-0000-4000-8000-000000000003	user@fgv.nu	User	Exempel	true	fgv-spexregister:USER fgv-revival:USER fgv-spexify:USER fgv-spexflix:USER fgv-spexgram:USER fgv-archive:USER fgv-spexipedia:USER
+00000000-0000-4000-8000-000000000001	admin@fgv.nu	Admin	Exempel	true	fgv-spexregister:USER,EDITOR,ADMIN fgv-revival:USER,SUPER_ADMIN fgv-spexify:USER,EDITOR,ADMIN fgv-spexflix:USER,EDITOR,ADMIN fgv-spexgram:USER,EDITOR,ADMIN fgv-archive:USER,EDITOR,ADMIN fgv-spexipedia:USER,AUTHOR,EDITOR,ADMIN fgv-membership:USER,BOARD,TREASURER,ADMIN
+00000000-0000-4000-8000-000000000002	editor@fgv.nu	Editor	Exempel	true	fgv-spexregister:USER,EDITOR fgv-spexify:USER,EDITOR fgv-spexflix:USER,EDITOR fgv-spexgram:USER,EDITOR fgv-archive:USER,EDITOR fgv-spexipedia:USER,AUTHOR,EDITOR fgv-membership:USER,BOARD
+00000000-0000-4000-8000-000000000003	user@fgv.nu	User	Exempel	true	fgv-spexregister:USER fgv-revival:USER fgv-spexify:USER fgv-spexflix:USER fgv-spexgram:USER fgv-archive:USER fgv-spexipedia:USER fgv-membership:USER
 00000000-0000-4000-8000-000000000004	author@fgv.nu	Agnes	Author	true	fgv-spexipedia:USER,AUTHOR
 00000000-0000-4000-8000-000000000005	no-access@fgv.nu	No	Access	true	-
 00000000-0000-4000-8000-000000000011	observer@fgv.nu	Observer	Exempel	true	fgv-revival:USER,OBSERVER

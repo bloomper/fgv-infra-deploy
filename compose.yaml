@@ -42,7 +42,6 @@ services:
         export KC_DB_PASSWORD=$$(cat /run/secrets/KEYCLOAK_MYSQL_USER_PASSWORD)
         export KC_BOOTSTRAP_ADMIN_PASSWORD=$$(cat /run/secrets/KEYCLOAK_ADMIN_PASSWORD)
         export SMTP_PASSWORD=$$(cat /run/secrets/SMTP_PASSWORD)
-        export KC_SPI_FORM_ACTION__FGV_TURNSTILE__SECRET_KEY=$$(cat /run/secrets/TURNSTILE_SECRET_KEY)
         exec /opt/keycloak/bin/kc.sh start --import-realm
     environment:
       KC_HOSTNAME: https://${KEYCLOAK_HOST}/auth
@@ -58,8 +57,6 @@ services:
       KC_DB: mysql
       KC_DB_URL: jdbc:mysql://keycloak-mysql/${KEYCLOAK_MYSQL_DATABASE}
       KC_DB_USERNAME: ${KEYCLOAK_MYSQL_USER}
-      KC_SPI_EVENTS_LISTENER__FGV_ADMIN_NOTIFICATION__RECIPIENTS: ${ADMIN_NOTIFICATION_RECIPIENTS}
-      KC_SPI_FORM_ACTION__FGV_TURNSTILE__SITE_KEY: ${TURNSTILE_SITE_KEY:-}
       # The realm's clients, read by fgv.json when the realm is imported
       SPEXREGISTER_NAME: ${SPEXREGISTER_NAME:-Spexregister}
       SPEXREGISTER_URL: https://${SPEXREGISTER_WEB_HOST:?SPEXREGISTER_WEB_HOST must be set in .env}
@@ -82,6 +79,9 @@ services:
       SPEXIPEDIA_NAME: ${SPEXIPEDIA_NAME:-Spexipedia}
       SPEXIPEDIA_URL: https://${SPEXIPEDIA_WEB_HOST:?SPEXIPEDIA_WEB_HOST must be set in .env}
       SPEXIPEDIA_MCP_URL: https://${SPEXIPEDIA_API_HOST:?SPEXIPEDIA_API_HOST must be set in .env}/api/mcp
+      MEMBERSHIP_NAME: ${MEMBERSHIP_NAME:-Medlemskap}
+      # Also where the login page's Register link goes: registration is Medlemskap's
+      MEMBERSHIP_URL: https://${MEMBERSHIP_WEB_HOST:?MEMBERSHIP_WEB_HOST must be set in .env}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_FROM: ${MAIL_FROM}
@@ -108,7 +108,6 @@ services:
       - KEYCLOAK_MYSQL_USER_PASSWORD
       - KEYCLOAK_ADMIN_PASSWORD
       - SMTP_PASSWORD
-      - TURNSTILE_SECRET_KEY
 
   umami-postgres:
     image: ${POSTGRES_IMAGE:-postgres:17-alpine}
@@ -178,8 +177,6 @@ secrets:
     file: ./secrets/KEYCLOAK_ADMIN_PASSWORD
   SMTP_PASSWORD:
     file: ./secrets/SMTP_PASSWORD
-  TURNSTILE_SECRET_KEY:
-    file: ./secrets/TURNSTILE_SECRET_KEY
   UMAMI_POSTGRES_PASSWORD:
     file: ./secrets/UMAMI_POSTGRES_PASSWORD
   UMAMI_APP_SECRET:

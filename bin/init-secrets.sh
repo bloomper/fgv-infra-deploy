@@ -33,18 +33,13 @@ fi
 # Client secrets, set in the realm by bin/configure-keycloak.sh and copied by the applications' bin/init-secrets.sh
 for client in fgv-admin fgv-spexregister fgv-revival fgv-revival-service fgv-spexify fgv-spexify-service fgv-spexflix fgv-spexflix-service \
     fgv-spexgram fgv-spexgram-service fgv-archive fgv-archive-service fgv-spexipedia fgv-spexipedia-service \
-    fgv-spexregister-service fgv-content-migration; do
+    fgv-membership fgv-membership-service fgv-spexregister-service fgv-content-migration; do
   generate "clients/$client" "$(random 32)"
 done
 
 if [[ ! -e secrets/SMTP_PASSWORD ]]; then
   : > secrets/SMTP_PASSWORD
   echo "created secrets/SMTP_PASSWORD (empty, write the SMTP password into it if the relay needs one)"
-fi
-
-if [[ ! -e secrets/TURNSTILE_SECRET_KEY ]]; then
-  : > secrets/TURNSTILE_SECRET_KEY
-  echo "created secrets/TURNSTILE_SECRET_KEY (empty, write the Turnstile secret key into it)"
 fi
 
 if [[ ! -s secrets/cloudflared.env ]]; then
