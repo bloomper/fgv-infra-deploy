@@ -389,7 +389,7 @@ runs as well; Spexify's and Spexflix's sample data need Spexregister's.
 Add to `/etc/hosts` (or the Windows equivalent):
 
 ```
-127.0.0.1 auth.fgv.local.nu mail.fgv.local.nu analytics.fgv.local.nu api.register.fgv.local.nu register.fgv.local.nu api.revival.fgv.local.nu revival.fgv.local.nu
+127.0.0.1 auth.fgv.local.nu mail.fgv.local.nu analytics.fgv.local.nu api.register.fgv.local.nu register.fgv.local.nu api.revival.fgv.local.nu revival.fgv.local.nu api.membership.fgv.local.nu membership.fgv.local.nu
 127.0.0.1 api.spexify.fgv.local.nu spexify.fgv.local.nu api.spexflix.fgv.local.nu spexflix.fgv.local.nu media.spexflix.fgv.local.nu
 127.0.0.1 api.spexgram.fgv.local.nu spexgram.fgv.local.nu media.spexgram.fgv.local.nu api.archive.fgv.local.nu archive.fgv.local.nu
 127.0.0.1 api.spexipedia.fgv.local.nu spexipedia.fgv.local.nu media.spexipedia.fgv.local.nu
@@ -436,7 +436,8 @@ cd .. && bin/seed-users.sh --local      # the sample users, password s3cr3t-s3cr
   8083, `media.spexflix.fgv.local.nu` to `spexflix-media` or port 8084, `api.spexgram.fgv.local.nu` to `spexgram-api`
   or port 8085, `media.spexgram.fgv.local.nu` to `spexgram-media` or port 8086, and `api.archive.fgv.local.nu` to
   `archive-api` or port 8087, `api.spexipedia.fgv.local.nu` to `spexipedia-api` or port 8088, and
-  `media.spexipedia.fgv.local.nu` to `spexipedia-media` or port 8089.
+  `media.spexipedia.fgv.local.nu` to `spexipedia-media` or port 8089, and `api.membership.fgv.local.nu` to
+  `membership-api` or port 8090.
 
 ## Image tags
 
