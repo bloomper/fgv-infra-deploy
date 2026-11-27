@@ -39,6 +39,16 @@ api.revival.fgv.local.nu:8443 {
     }
 }
 
+api.membership.fgv.local.nu:8443 {
+    tls internal
+    reverse_proxy membership-api:8080 host.docker.internal:8090 {
+        lb_policy first
+        lb_try_duration 2s
+        fail_duration 10s
+        header_up X-Forwarded-Port {http.request.port}
+    }
+}
+
 api.spexify.fgv.local.nu:8443 {
     tls internal
     reverse_proxy spexify-api:8080 host.docker.internal:8082 {

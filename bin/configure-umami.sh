@@ -24,6 +24,7 @@ if [[ ${1:-} == local ]]; then
     "${SPEXGRAM_NAME:-Spexgram}" "$(host "${SPEXGRAM_URL:-http://localhost:3004}")" "Spexgram web's .env.local"
     "${ARCHIVE_NAME:-Spexarkiv}" "$(host "${ARCHIVE_URL:-http://localhost:3005}")" "Spexarkiv web's .env.local"
     "${SPEXIPEDIA_NAME:-Spexipedia}" "$(host "${SPEXIPEDIA_URL:-http://localhost:3006}")" "Spexipedia web's .env.local"
+    "${MEMBERSHIP_NAME:-Medlemskap}" "$(host "${MEMBERSHIP_URL:-http://localhost:3007}")" "Medlemskap web's .env.local"
   )
 else
   password=$(cat secrets/UMAMI_ADMIN_PASSWORD)
@@ -35,6 +36,7 @@ else
     "${SPEXGRAM_NAME:-Spexgram}" "$SPEXGRAM_WEB_HOST" "fgv-spexgram-deploy's .env"
     "${ARCHIVE_NAME:-Spexarkiv}" "$ARCHIVE_WEB_HOST" "fgv-archive-deploy's .env"
     "${SPEXIPEDIA_NAME:-Spexipedia}" "$SPEXIPEDIA_WEB_HOST" "fgv-spexipedia-deploy's .env"
+    "${MEMBERSHIP_NAME:-Medlemskap}" "$MEMBERSHIP_WEB_HOST" "fgv-membership-deploy's .env"
   )
 fi
 

@@ -16,7 +16,7 @@ statistics, the shared Docker network and, on staging, Mailpit. Each application
 
 Cloudflare is used on staging only. Staging is published through a Cloudflare Tunnel, as below; production uses no
 Cloudflare Tunnel, DNS or Access and sits behind its own reverse proxy instead (see *Production*). The one Cloudflare
-service both use is the Turnstile CAPTCHA on Keycloak's registration page.
+service both use is the Turnstile CAPTCHA on Medlemskap's registration page.
 
 ```
 Staging:
@@ -93,7 +93,7 @@ use `restart: unless-stopped`.
 ## 2. Cloudflare (staging only)
 
 Only staging uses Cloudflare; on production, skip steps 1–4 and point the hostnames in the table at production's
-reverse proxy (see *Production*). Step 5, Turnstile, applies to both.
+reverse proxy (see *Production*).
 
 Staging's DNS must be hosted on Cloudflare. Use single-level subdomains such as
 `auth-staging.example.org`. A name like `auth.staging.example.org` is two levels deep, and the free
@@ -113,10 +113,6 @@ Universal SSL certificate doesn't cover it.
    | `MAIL_HOST`      | `http://mailpit:8025` (staging only) |
 
 4. Restrict who can reach the admin console, Umami and Mailpit with Cloudflare Access. See *Cloudflare Access* below.
-5. Staging and production: open *Turnstile* in the dashboard and select *Add widget*. Name it e.g.
-   `keycloak-staging` (one widget per environment), add `KEYCLOAK_HOST` as
-   hostname and choose *Managed* as widget mode. Put the site key in `TURNSTILE_SITE_KEY` in `.env` and the
-   secret key in `secrets/TURNSTILE_SECRET_KEY` (see section 3 below).
 
 ### Cloudflare Access
 
@@ -150,11 +146,10 @@ Check the deploy repositories out next to each other, e.g. in the host user's ho
 git clone https://github.com/bloomper/fgv-infra-deploy.git
 cd fgv-infra-deploy
 
-cp staging.env.example .env               # set the hostnames, email addresses and TURNSTILE_SITE_KEY
+cp staging.env.example .env               # set the hostnames and email addresses
 bin/init-secrets.sh
 nano secrets/cloudflared.env              # staging only: TUNNEL_TOKEN=<token from step 2>
 nano secrets/tailscale.env                # staging only: TS_AUTHKEY=<auth key, see Tailnet>
-printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 ```
 
 `.env` names every application that logs in through the realm, because Keycloak needs each one's address:
@@ -177,6 +172,7 @@ printf '%s' '<secret key>' > secrets/TURNSTILE_SECRET_KEY
 | `ARCHIVE_API_HOST` | Spexarkiv's `API_HOST`: audience in tokens for `fgv-archive-mcp` |
 | `SPEXIPEDIA_NAME`, `SPEXIPEDIA_WEB_HOST` | Name and `WEB_HOST` of Spexipedia (`fgv-spexipedia`)    |
 | `SPEXIPEDIA_API_HOST` | Spexipedia's `API_HOST`: audience in tokens for `fgv-spexipedia-mcp` |
+| `MEMBERSHIP_NAME`, `MEMBERSHIP_WEB_HOST` | Name and `WEB_HOST` of Medlemskap (`fgv-membership`); `https://MEMBERSHIP_WEB_HOST` is also where the login page's *Register* link goes |
 | `TAILNET_TAG`, `TAILSCALE_IMAGE` | Staging only: the Funnel machines, see *Tailnet*           |
 | `SPEXFLIX_MEDIA_HOST`, `SPEXGRAM_MEDIA_HOST`, `ACME_EMAIL` | Production only: the edge proxy, see *Edge proxy* |
 
@@ -269,12 +265,15 @@ Users add a passkey under *Signing in* in the account console (`https://KEYCLOAK
 can then sign in with it instead of a password. Passkeys are bound to `KEYCLOAK_HOST`, so changing that hostname
 makes every registered passkey unusable.
 
-### Registration CAPTCHA
+### Registration
 
-New users solve a Cloudflare Turnstile challenge on the registration page. Without `TURNSTILE_SITE_KEY` or
-`secrets/TURNSTILE_SECRET_KEY`, Keycloak logs a warning at start and registration has no CAPTCHA. Cloudflare's
-test keys `1x00000000000000000000AA` (site key) and `1x0000000000000000000000000000000AA` (secret key) always pass
-and work on any hostname.
+Registration is Medlemskap's, not Keycloak's: the login page's *Register* link goes to
+`https://MEMBERSHIP_WEB_HOST/register`, where new users solve a Cloudflare Turnstile challenge, and Medlemskap
+creates the user in Keycloak and sends the emails around approval. The Turnstile keys and the recipients of the
+*new user* email are set in `fgv-membership-deploy` (`TURNSTILE_SITE_KEY`, `secrets/TURNSTILE_SECRET_KEY`,
+`REGISTRATION_NOTIFY_RECIPIENTS`), and Keycloak no longer reads `TURNSTILE_*` or `ADMIN_NOTIFICATION_RECIPIENTS`.
+Keycloak's own registration is switched off in the realm; an environment whose realm was imported before that
+change needs the realm's changes applied (see `fgv-keycloak`) before the *Register* link points to Medlemskap.
 
 ## Updating
 
@@ -390,7 +389,7 @@ runs as well; Spexify's and Spexflix's sample data need Spexregister's.
 Add to `/etc/hosts` (or the Windows equivalent):
 
 ```
-127.0.0.1 auth.fgv.local.nu mail.fgv.local.nu analytics.fgv.local.nu api.register.fgv.local.nu register.fgv.local.nu api.revival.fgv.local.nu revival.fgv.local.nu
+127.0.0.1 auth.fgv.local.nu mail.fgv.local.nu analytics.fgv.local.nu api.register.fgv.local.nu register.fgv.local.nu api.revival.fgv.local.nu revival.fgv.local.nu api.membership.fgv.local.nu membership.fgv.local.nu
 127.0.0.1 api.spexify.fgv.local.nu spexify.fgv.local.nu api.spexflix.fgv.local.nu spexflix.fgv.local.nu media.spexflix.fgv.local.nu
 127.0.0.1 api.spexgram.fgv.local.nu spexgram.fgv.local.nu media.spexgram.fgv.local.nu api.archive.fgv.local.nu archive.fgv.local.nu
 127.0.0.1 api.spexipedia.fgv.local.nu spexipedia.fgv.local.nu media.spexipedia.fgv.local.nu
@@ -415,13 +414,12 @@ cd .. && bin/seed-users.sh --local      # the sample users, password s3cr3t-s3cr
 - `local/.env` sets the applications' local addresses, which the realm's redirect URIs and MCP audiences are made
   from: Spexregister's web on `http://localhost:3000`, Nyuppsättning's on `http://localhost:3001`, Spexify's on
   `http://localhost:3002`, Spexflix's on `http://localhost:3003`, Spexgram's on `http://localhost:3004`, Spexarkiv's on
-  `http://localhost:3005`, Spexipedia's on `http://localhost:3006`, and the MCP endpoints of Spexregister,
+  `http://localhost:3005`, Spexipedia's on `http://localhost:3006`, Medlemskap's on `http://localhost:3007`, and the MCP endpoints of Spexregister,
   Nyuppsättning, Spexipedia, Spexify, Spexflix, Spexgram and Spexarkiv.
-- Registration uses Cloudflare's Turnstile test keys, which always pass. To see a failed challenge, add
-  `TURNSTILE_SECRET_KEY=2x0000000000000000000000000000000AA` to `local/.env` and run
-  `docker compose up -d keycloak-server`.
+- Registration is Medlemskap's: `MEMBERSHIP_URL` (`http://localhost:3007`) is where the login page's *Register*
+  link goes. Medlemskap's `local` profile skips Turnstile, or use Cloudflare's test keys there.
 - Umami keeps user `admin` and password `umami` locally. `local/bin/configure-umami.sh` adds a website for the hosts
-  of `SPEXREGISTER_URL`, `REVIVAL_URL`, `SPEXIFY_URL`, `SPEXFLIX_URL`, `SPEXGRAM_URL`, `ARCHIVE_URL` and `SPEXIPEDIA_URL` (all `localhost`, told apart by name) and
+  of `SPEXREGISTER_URL`, `REVIVAL_URL`, `SPEXIFY_URL`, `SPEXFLIX_URL`, `SPEXGRAM_URL`, `ARCHIVE_URL`, `SPEXIPEDIA_URL` and `MEMBERSHIP_URL` (all `localhost`, told apart by name) and
   prints their IDs for
   `UMAMI_WEBSITE_ID` in each web's `.env.local`. Its
   database is in `local/.docker/umami-postgres/data`; empty that directory to start over. Browsers with *Do Not
@@ -438,7 +436,8 @@ cd .. && bin/seed-users.sh --local      # the sample users, password s3cr3t-s3cr
   8083, `media.spexflix.fgv.local.nu` to `spexflix-media` or port 8084, `api.spexgram.fgv.local.nu` to `spexgram-api`
   or port 8085, `media.spexgram.fgv.local.nu` to `spexgram-media` or port 8086, and `api.archive.fgv.local.nu` to
   `archive-api` or port 8087, `api.spexipedia.fgv.local.nu` to `spexipedia-api` or port 8088, and
-  `media.spexipedia.fgv.local.nu` to `spexipedia-media` or port 8089.
+  `media.spexipedia.fgv.local.nu` to `spexipedia-media` or port 8089, and `api.membership.fgv.local.nu` to
+  `membership-api` or port 8090.
 
 ## Image tags
 
