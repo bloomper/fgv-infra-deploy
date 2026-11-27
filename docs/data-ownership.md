@@ -135,6 +135,7 @@ again in the master (or, in Spexregister and Spexarkivet, the whole feed is pull
 | Nyuppsättning → Spexregister | `REVIVAL` | Read spexare; at closing create spexare, activities |
 | Medlemskap → Spexregister (planned) | `MEMBERSHIP` | Read spexare; create a spexare for an accepted application |
 | fgv-content-migration → all | `IMPORT`, `SYNC` | One-time migration through each master's import API |
+| fgv-revival-migration → Nyuppsättning | `SUPER_ADMIN` | One-time migration of the guide into its first draft, through the guide editor's GraphQL API |
 
 ## 4. Known gaps
 

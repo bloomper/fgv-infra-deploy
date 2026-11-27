@@ -197,7 +197,7 @@ changes:
 
 - sets the secret of each client in `secrets/clients/`: `fgv-admin`, every application's web client
   (`fgv-spexregister`, `fgv-revival`, `fgv-spexify` and so on), every service account (`fgv-revival-service`,
-  `fgv-spexipedia-service` and so on) and `fgv-content-migration`. The secrets in `fgv.json` are public
+  `fgv-spexipedia-service` and so on), `fgv-content-migration` and `fgv-revival-migration`. The secrets in `fgv.json` are public
 - gives the service account of `fgv-admin` the `realm-management` roles the applications need, including
   `manage-events` so that migrating can turn off the event listener `fgv-admin-notification`
 - gives the clients that call Keycloak's admin API (`fgv-admin`, `fgv-spexify-service`, `fgv-spexgram-service`,
@@ -367,6 +367,8 @@ A production host differs in these ways:
   there instead of with Access. Turnstile is used as on staging.
 - after the one-time content migration, the client `fgv-content-migration` is disabled (see `fgv-content-migration`,
   *When the migration is done*): it may write through five applications' import APIs and nothing needs it afterwards
+- after the guide is migrated into Nyuppsättning, the client `fgv-revival-migration` is disabled (see
+  `fgv-revival-migration`, *When the migration is done*): it is a super admin of Nyuppsättning
 
 ## Local development
 
